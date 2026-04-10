@@ -28,22 +28,26 @@ public class XPTweak extends JavaPlugin {
 
     @Override
     public void onLoad() {
+        // Inicializa o Hook do WorldGuard para registrar a flag customizada
         this.wgHook = new WorldGuardHook();
         this.wgHook.registerFlag();
     }
 
     @Override
     public void onEnable() {
+        // 1. Setup da Economia (Vault)
         if (!setupEconomy()) {
             getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
+        // 2. Garantir que arquivos existam e carregar config
         saveDefaultConfig();
         saveDefaultMessages();
         reloadPluginConfig();
 
+        // 3. Inicializar Managers e Utilitários
         this.databaseManager = new DatabaseManager(this);
         this.discordWebhook = new DiscordWebhook(this);
         this.xpManager = new XPManager(this);
@@ -51,14 +55,16 @@ public class XPTweak extends JavaPlugin {
         this.auctionManager = new AuctionManager(this);
         this.xpRainManager = new XPRainManager(this);
 
+        // 4. Registro de Comandos e TabCompleter
         XPTCommand xptCmd = new XPTCommand(this);
         getCommand("xpt").setExecutor(xptCmd);
         getCommand("xpt").setTabCompleter(new TabCompleter());
         getCommand("xptc").setExecutor(new XPTCCommand(this));
         
+        // 5. Registro de Eventos
         getServer().getPluginManager().registerEvents(new XPEventListener(this), this);
 
-        getLogger().info("XPTweak 1.0 enabled successfully!");
+        getLogger().info("XPTweak 1.0 (Precise XP) enabled successfully!");
     }
 
     @Override
@@ -108,18 +114,20 @@ public class XPTweak extends JavaPlugin {
         messages = YamlConfiguration.loadConfiguration(langFile);
     }
 
+    // Pega mensagem formatada com Cores e Prefixo (Para o Chat)
     public String getMessage(String path) {
         String msg = messages.getString(path, "Message missing: " + path);
         String prefix = messages.getString("prefix", "&8[&aXPTweak&8] ");
         return ChatColor.translateAlternateColorCodes('&', prefix + msg);
     }
 
-    // Método para pegar a mensagem pura para o Discord (sem prefixo e sem cores para Webhook)
+    // Pega mensagem SEM prefixo e SEM processar cores (Para o Webhook/Discord)
     public String getMessageRaw(String path) {
         if (messages == null) return "Messages not loaded";
         return messages.getString(path, "Message missing: " + path);
     }
 
+    // Getters
     public static Economy getEconomy() { return econ; }
     public XPManager getXpManager() { return xpManager; }
     public TransactionManager getTransactionManager() { return transactionManager; }

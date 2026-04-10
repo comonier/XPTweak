@@ -29,8 +29,10 @@ syntax-lvl: "&cUso: /xpt lvl <quantidade>"
 syntax-give: "&cUso: /xpt give <jogador> <quantidade>"
 syntax-auc: "&cUso: /xpt auc <níveis> <preço_inicial>"
 manual-rain-started: "&aChuva de XP manual iniciada: &e{amount} &aesferas por &e{time} &asegundos!"
-# Mensagens de Webhook
+
+# Mensagens de Webhook (Discord)
 webhook-rain-announcement: "🌧️ **Chuva de XP vindo aí!** O evento começará em **{time}** na arena designada."
 webhook-rain-started: "⚡ **A Chuva de XP COMEÇOU!** Corram para a arena para coletar seus orbs!"
-webhook-donate-report: "📜 **Doação de XP**: {sender} doou {amount} níveis para {target}."
-webhook-auction-report: "💰 **Leilão de XP**: {player} vendeu {amount} níveis por {price} para {winner}."
+webhook-donate-report: "📜 **Doação de XP**: {sender} doou {amount} níveis para {target} ({points} pontos)."
+webhook-auction-report: "💰 **Leilão de XP**: {player} vendeu {amount} níveis por {price} para {winner} ({points} pontos)."
+webhook-bottle-storage: "🍾 **Armazenamento**: {player} guardou {amount} níveis em uma garrafa customizada ({points} pontos)."

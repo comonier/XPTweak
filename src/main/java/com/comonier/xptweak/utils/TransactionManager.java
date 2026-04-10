@@ -16,7 +16,6 @@ public class TransactionManager {
     }
 
     public void createRequest(Player sender, Player target, int levelsToGive) {
-        // Calcula quanto de XP real (pontos) esses níveis valem no nível ATUAL do doador
         int currentXp = plugin.getXpManager().getTotalExperience(sender);
         int xpAfterSubtraction = plugin.getXpManager().getExpAtLevel(sender.getLevel() - levelsToGive);
         int pointsToTransfer = currentXp - xpAfterSubtraction;
@@ -48,23 +47,22 @@ public class TransactionManager {
             return;
         }
 
-        // Verifica se o doador ainda tem o XP necessário
         if (sender.getLevel() < request.levels()) {
             target.sendMessage(plugin.getMessage("not-enough-xp-sender"));
-            sender.sendMessage(plugin.getMessage("not-enough-xp"));
             return;
         }
 
-        // Transfere os PONTOS exatos
+        // Transfere pontos exatos para evitar inflação de níveis
         sender.setLevel(sender.getLevel() - request.levels());
         target.giveExp(request.points());
 
-        // Discord Report
+        // Report Discord
         String webhookUrl = plugin.getConfig().getString("webhooks.donations");
         plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-donate-report")
                 .replace("{sender}", sender.getName())
                 .replace("{amount}", String.valueOf(request.levels()))
-                .replace("{target}", target.getName()));
+                .replace("{target}", target.getName())
+                .replace("{points}", String.valueOf(request.points())));
 
         sender.sendMessage(plugin.getMessage("donate-success-sender").replace("{player}", target.getName()));
         target.sendMessage(plugin.getMessage("donate-success-target").replace("{player}", sender.getName()));

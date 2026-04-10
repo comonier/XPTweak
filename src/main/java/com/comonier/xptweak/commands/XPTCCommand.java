@@ -46,18 +46,26 @@ public class XPTCCommand implements CommandExecutor {
             return true;
         }
 
-        // Pega os pontos exatos de XP que os níveis representam
         int currentTotalXp = plugin.getXpManager().getTotalExperience(player);
-        int xpPointsForLevels = plugin.getXpManager().getExpAtLevel(levelsToStore);
-        
-        // Garante que não tente tirar mais pontos do que o jogador realmente tem (bug de arredondamento)
-        int finalPoints = Math.min(currentTotalXp, xpPointsForLevels);
+        int xpAfterSubtraction = plugin.getXpManager().getExpAtLevel(player.getLevel() - levelsToStore);
+        int finalPoints = currentTotalXp - xpAfterSubtraction;
 
         ItemStack customBottle = plugin.getXpManager().createCustomBottle(player.getName(), levelsToStore, finalPoints);
         
-        // Remove os níveis do jogador
+        if (player.getInventory().firstEmpty() == -1) {
+            player.sendMessage(plugin.getMessage("inventory-full"));
+            return true;
+        }
+
         player.setLevel(player.getLevel() - levelsToStore);
         player.getInventory().addItem(customBottle);
+
+        // Report Discord
+        String webhookUrl = plugin.getConfig().getString("webhooks.donations");
+        plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-bottle-storage")
+                .replace("{player}", player.getName())
+                .replace("{amount}", String.valueOf(levelsToStore))
+                .replace("{points}", String.valueOf(finalPoints)));
         
         player.sendMessage(plugin.getMessage("xp-custom-bottle").replace("{amount}", String.valueOf(levelsToStore)));
         return true;
