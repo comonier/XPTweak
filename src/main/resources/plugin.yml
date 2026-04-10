@@ -18,7 +18,7 @@ commands:
 permissions:
   # Permissões de Usuário
   xptweak.user.base:
-    description: Permite acessar o menu de ajuda.
+    description: Permite acessar o menu de ajuda e aceitar doações.
     default: true
   xptweak.user.store:
     description: Permite guardar XP em garrafas (max/lvl).
@@ -27,7 +27,7 @@ permissions:
     description: Permite doar e aceitar doações de XP.
     default: true
   xptweak.user.auction:
-    description: Permite participar e iniciar leilões de XP.
+    description: Permite iniciar, participar e silenciar (list) leilões de XP.
     default: true
   xptweak.user.custom:
     description: Permite criar garrafas de XP customizadas (NBT).

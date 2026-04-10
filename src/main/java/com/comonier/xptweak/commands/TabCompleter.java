@@ -27,7 +27,8 @@ public class TabCompleter implements org.bukkit.command.TabCompleter {
 
         if (args.length == 2) {
             String sub = args[0].toLowerCase();
-            if (sub.equals("give")) return null; // Sugere players
+            if (sub.equals("give")) return null; 
+            if (sub.equals("auc")) return StringUtil.copyPartialMatches(args[1], Collections.singletonList("list"), new ArrayList<>());
             if (sub.equals("bid")) return StringUtil.copyPartialMatches(args[1], Arrays.asList("x1", "x2"), new ArrayList<>());
             if (sub.equals("rain")) return Arrays.asList("1000", "5000");
         }
