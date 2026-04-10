@@ -26,54 +26,45 @@ public class XPTweak extends JavaPlugin {
 
     @Override
     public void onLoad() {
-        // Registro da flag customizada do WorldGuard
         this.wgHook = new WorldGuardHook();
         this.wgHook.registerFlag();
     }
 
     @Override
     public void onEnable() {
-        // 1. Setup Economia (Vault)
         if (!setupEconomy()) {
-            getLogger().severe("Vault dependency not found or Economy provider missing! Disabling plugin...");
+            getLogger().severe("Vault dependency not found! Disabling plugin...");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        // 2. Setup de Arquivos e Idioma
         saveDefaultConfig();
         saveDefaultMessages();
-        reloadPluginConfig();
-
-        // 3. Inicialização de Managers (Ordem importa para evitar NullPointer)
+        
+        // Inicialização básica primeiro
         this.databaseManager = new DatabaseManager(this);
         this.discordWebhook = new DiscordWebhook(this);
         this.xpManager = new XPManager(this);
         this.transactionManager = new TransactionManager(this);
-        this.auctionManager = new AuctionManager(this); // Gerencia o silenciamento (auc list)
-        this.xpRainManager = new XPRainManager(this);
+        this.auctionManager = new AuctionManager(this);
+        
+        // Carrega idioma e inicia o RainManager
+        reloadPluginConfig();
 
-        // 4. Registro de Comandos e TabCompleter
         XPTCommand xptCmd = new XPTCommand(this);
         getCommand("xpt").setExecutor(xptCmd);
         getCommand("xpt").setTabCompleter(new TabCompleter());
         getCommand("xptc").setExecutor(new XPTCCommand(this));
         
-        // 5. Registro de Eventos
         getServer().getPluginManager().registerEvents(new XPEventListener(this), this);
 
-        getLogger().info("XPTweak has been enabled! Ready for versions 1.19+ and Folia.");
+        getLogger().info("XPTweak has been enabled! Precision XP engine active.");
     }
 
     @Override
     public void onDisable() {
-        // Cancelar tarefas agendadas (Leilão e Chuva de XP) para evitar memory leaks
         getServer().getScheduler().cancelTasks(this);
-        
-        // Fechar conexão com banco de dados
-        if (databaseManager != null) {
-            databaseManager.closeConnection();
-        }
+        if (databaseManager != null) databaseManager.closeConnection();
     }
 
     private boolean setupEconomy() {
@@ -88,9 +79,7 @@ public class XPTweak extends JavaPlugin {
         String[] langs = {"en", "pt", "es", "ru"};
         for (String lang : langs) {
             File file = new File(getDataFolder(), "messages_" + lang + ".yml");
-            if (!file.exists()) {
-                saveResource("messages_" + lang + ".yml", false);
-            }
+            if (!file.exists()) saveResource("messages_" + lang + ".yml", false);
         }
     }
 
@@ -98,48 +87,37 @@ public class XPTweak extends JavaPlugin {
         try {
             reloadConfig();
             loadLanguage();
-            // Reinicia o scheduler da chuva de XP para aplicar novos horários da config
+            
+            // CORREÇÃO: Cancela as tarefas antigas antes de recriar o agendador da chuva
             if (xpRainManager != null) {
-                this.xpRainManager = new XPRainManager(this);
+                getServer().getScheduler().cancelTasks(this);
             }
+            this.xpRainManager = new XPRainManager(this);
+            
         } catch (Exception e) {
-            getLogger().severe("Error reloading config/messages: " + e.getMessage());
+            getLogger().severe("Critical error reloading config: " + e.getMessage());
         }
     }
 
     public void loadLanguage() {
         String lang = getConfig().getString("language", "en");
         File langFile = new File(getDataFolder(), "messages_" + lang + ".yml");
-        if (!langFile.exists()) {
-            langFile = new File(getDataFolder(), "messages_en.yml");
-        }
+        if (!langFile.exists()) langFile = new File(getDataFolder(), "messages_en.yml");
         messages = YamlConfiguration.loadConfiguration(langFile);
     }
 
-    /**
-     * Retorna mensagem formatada. Se for o prefixo, não concatena a si mesmo.
-     */
     public String getMessage(String path) {
-        if (messages == null) return "Messages not loaded";
-        String msg = messages.getString(path, "Missing path: " + path);
-        
-        if (path.equals("prefix")) {
-            return ChatColor.translateAlternateColorCodes('&', msg);
-        }
-        
+        String msg = messages.getString(path, "Missing message: " + path);
+        if (path.equals("prefix")) return ChatColor.translateAlternateColorCodes('&', msg);
         String prefix = messages.getString("prefix", "&8[&aXPTweak&8] ");
         return ChatColor.translateAlternateColorCodes('&', prefix + msg);
     }
 
-    /**
-     * Retorna mensagem pura para webhooks do Discord.
-     */
     public String getMessageRaw(String path) {
-        if (messages == null) return "";
-        return messages.getString(path, "");
+        if (messages == null) return "Messages not loaded";
+        return messages.getString(path, "Missing message: " + path);
     }
 
-    // Getters estáticos e de instância
     public static Economy getEconomy() { return econ; }
     public XPManager getXpManager() { return xpManager; }
     public TransactionManager getTransactionManager() { return transactionManager; }

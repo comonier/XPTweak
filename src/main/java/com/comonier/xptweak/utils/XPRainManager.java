@@ -23,6 +23,7 @@ public class XPRainManager {
     private final XPTweak plugin;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
     private final Random random = new Random();
+    private int lastProcessedMinute = -1; // Trava contra duplicatas no mesmo minuto
 
     public XPRainManager(XPTweak plugin) {
         this.plugin = plugin;
@@ -33,48 +34,55 @@ public class XPRainManager {
         new BukkitRunnable() {
             @Override
             public void run() {
-                LocalTime now = LocalTime.now().withSecond(0).withNano(0);
+                LocalTime now = LocalTime.now();
+                int currentMinute = now.getHour() * 60 + now.getMinute();
+
+                // Se já processamos este minuto, ignora
+                if (currentMinute == lastProcessedMinute) return;
+                
                 List<String> scheduledTimes = plugin.getConfig().getStringList("xp-rain.times");
 
                 for (String timeStr : scheduledTimes) {
                     try {
                         LocalTime rainTime = LocalTime.parse(timeStr, timeFormatter);
-                        long diffMinutes = Duration.between(now, rainTime).toMinutes();
+                        long diffMinutes = Duration.between(now.withSecond(0).withNano(0), rainTime).toMinutes();
 
                         if (diffMinutes < 0) diffMinutes += 1440;
 
-                        handleAnnouncements(diffMinutes);
-                        
-                        if (diffMinutes == 0) {
-                            String webhookUrl = plugin.getConfig().getString("webhooks.xp-rain");
-                            plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-rain-started"));
-                            executeRain(plugin.getConfig().getInt("xp-rain.total-orbs", 500), 10);
+                        if (diffMinutes >= 0 && diffMinutes <= 30) {
+                            lastProcessedMinute = currentMinute; // Marca como processado
+                            handleAnnouncements(diffMinutes);
+                            
+                            if (diffMinutes == 0) {
+                                String webhookUrl = plugin.getConfig().getString("webhooks.xp-rain");
+                                plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-rain-started"));
+                                executeRain(plugin.getConfig().getInt("xp-rain.total-orbs", 500), 10);
+                            }
                         }
                     } catch (Exception e) {
-                        plugin.getLogger().warning("Invalid time format in config: " + timeStr);
+                        // plugin.getLogger().warning("Invalid time format in config: " + timeStr);
                     }
                 }
             }
-        }.runTaskTimer(plugin, 0L, 1200L);
+        }.runTaskTimer(plugin, 20L, 600L); // Checa a cada 30 segundos para maior precisão
     }
 
     private void handleAnnouncements(long minutesLeft) {
         String webhookUrl = plugin.getConfig().getString("webhooks.xp-rain");
         String timeDisplay = formatMinutes(minutesLeft);
 
-        // DISCORD ANNOUNCEMENTS (30, 15, 10, 5)
+        // DISCORD (30, 15, 10, 5)
         if (minutesLeft == 30 || minutesLeft == 15 || minutesLeft == 10 || minutesLeft == 5) {
             String discordMsg = plugin.getMessageRaw("webhook-rain-announcement").replace("{time}", timeDisplay);
             plugin.getDiscordWebhook().send(webhookUrl, discordMsg);
         }
 
-        // IN-GAME ANNOUNCEMENTS (30, 15, 10, 5, 4, 3, 2, 1, 30s)
+        // IN-GAME
         if (plugin.getConfig().getBoolean("xp-rain.announcement-enabled", false)) {
             if (minutesLeft == 30 || minutesLeft == 15 || minutesLeft == 10 || 
                 minutesLeft == 5 || minutesLeft == 4 || minutesLeft == 3 || 
                 minutesLeft == 2 || minutesLeft == 1) {
                 
-                // Correção: plugin.getMessage() já traz o prefixo. Não concatenar outro manualmente.
                 Bukkit.broadcastMessage(plugin.getMessage("in-game-rain-announcement").replace("{time}", timeDisplay));
                 
                 if (minutesLeft == 1) {
@@ -130,6 +138,7 @@ public class XPRainManager {
 
     private String formatMinutes(long minutes) {
         if (minutes == 1) return "1 minute";
+        if (minutes == 0) return "now";
         return minutes + " minutes";
     }
 }

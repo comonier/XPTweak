@@ -4,35 +4,43 @@ import com.comonier.xptweak.XPTweak;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
 public class AuctionManager {
 
     private final XPTweak plugin;
-    private final Set<UUID> silencedPlayers = new HashSet<>();
+    private final Set<UUID> silencedPlayers;
     private UUID auctioneer;
-    private int levelsToSell;
-    private int pointsToTransfer;
+    private int levelsToSell, pointsToTransfer, timeLeft;
     private double currentBid;
     private UUID highestBidder;
-    private int timeLeft;
     private BukkitTask task;
     private boolean isActive = false;
 
     public AuctionManager(XPTweak plugin) {
         this.plugin = plugin;
+        // Carrega as preferências salvas no banco de dados ao iniciar
+        this.silencedPlayers = plugin.getDatabaseManager().loadSilencedPlayers();
     }
 
     public void toggleMessages(Player player) {
-        if (silencedPlayers.contains(player.getUniqueId())) {
-            silencedPlayers.remove(player.getUniqueId());
+        UUID uuid = player.getUniqueId();
+        boolean nowSilent;
+        
+        if (silencedPlayers.contains(uuid)) {
+            silencedPlayers.remove(uuid);
+            nowSilent = false;
             player.sendMessage(plugin.getMessage("auction-list-toggle").replace("{status}", "&aAtivadas"));
         } else {
-            silencedPlayers.add(player.getUniqueId());
+            silencedPlayers.add(uuid);
+            nowSilent = true;
             player.sendMessage(plugin.getMessage("auction-list-toggle").replace("{status}", "&cDesativadas"));
         }
+        
+        // Salva a preferência no banco de dados de forma assíncrona para não travar o servidor
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> 
+            plugin.getDatabaseManager().savePreference(uuid, nowSilent));
     }
 
     private void broadcastAuction(String message) {
@@ -116,26 +124,7 @@ public class AuctionManager {
             if (winner != null && XPTweak.getEconomy().has(winner, currentBid)) {
                 XPTweak.getEconomy().withdrawPlayer(winner, currentBid);
                 if (seller != null) XPTweak.getEconomy().depositPlayer(seller, currentBid);
-                
                 winner.giveExp(pointsToTransfer);
-
-                String webhookUrl = plugin.getConfig().getString("webhooks.auctions");
-                plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-auction-report")
-                        .replace("{player}", seller != null ? seller.getName() : "Unknown")
-                        .replace("{amount}", String.valueOf(levelsToSell))
-                        .replace("{price}", String.format("%.2f", currentBid))
-                        .replace("{winner}", winner.getName())
-                        .replace("{points}", String.valueOf(pointsToTransfer)));
-
-                winner.sendMessage(plugin.getMessage("auction-win")
-                        .replace("{amount}", String.valueOf(levelsToSell))
-                        .replace("{points}", String.valueOf(pointsToTransfer)));
-                
-                if (seller != null) {
-                    seller.sendMessage(plugin.getMessage("auction-sold")
-                        .replace("{price}", String.format("%.2f", currentBid))
-                        .replace("{points}", String.valueOf(pointsToTransfer)));
-                }
 
                 broadcastAuction(plugin.getMessage("auction-finished")
                         .replace("{player}", winner.getName())
