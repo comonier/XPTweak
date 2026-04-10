@@ -10,7 +10,8 @@ public class AuctionManager {
 
     private final XPTweak plugin;
     private UUID auctioneer;
-    private int amount;
+    private int levelsToSell;
+    private int pointsToTransfer;
     private double currentBid;
     private UUID highestBidder;
     private int timeLeft;
@@ -21,40 +22,64 @@ public class AuctionManager {
         this.plugin = plugin;
     }
 
-    public void startAuction(Player player, int amount, double startingPrice) {
+    public void startAuction(Player player, int levels, double startingPrice) {
         if (isActive) {
             player.sendMessage(plugin.getMessage("auction-already-running"));
             return;
         }
+
+        // Calcula o valor real em pontos que os níveis representam para o vendedor
+        int currentXp = plugin.getXpManager().getTotalExperience(player);
+        int xpAfterSubtraction = plugin.getXpManager().getExpAtLevel(player.getLevel() - levels);
+        this.pointsToTransfer = currentXp - xpAfterSubtraction;
+
+        if (this.pointsToTransfer <= 0) {
+            player.sendMessage(plugin.getMessage("not-enough-xp"));
+            return;
+        }
+
         this.auctioneer = player.getUniqueId();
-        this.amount = amount;
+        this.levelsToSell = levels;
         this.currentBid = startingPrice;
         this.highestBidder = null;
         this.timeLeft = plugin.getConfig().getInt("auction-time", 10);
         this.isActive = true;
 
+        // Remove os níveis do vendedor imediatamente
+        player.setLevel(player.getLevel() - levels);
+
         Bukkit.broadcastMessage(plugin.getMessage("auction-started")
                 .replace("{player}", player.getName())
-                .replace("{amount}", String.valueOf(amount))
+                .replace("{amount}", String.valueOf(levels))
                 .replace("{price}", String.format("%.2f", startingPrice)));
         runTask();
     }
 
     private void runTask() {
         task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            if (timeLeft <= 0) { finishAuction(); return; }
-            if (timeLeft <= 5) Bukkit.broadcastMessage(plugin.getMessage("auction-ending-soon").replace("{time}", String.valueOf(timeLeft)));
+            if (timeLeft <= 0) {
+                finishAuction();
+                return;
+            }
+            if (timeLeft <= 5) {
+                Bukkit.broadcastMessage(plugin.getMessage("auction-ending-soon").replace("{time}", String.valueOf(timeLeft)));
+            }
             timeLeft--;
         }, 20L, 20L);
     }
 
     public void placeBid(Player bidder, String type) {
-        if (!isActive) { bidder.sendMessage(plugin.getMessage("no-active-auction")); return; }
-        if (bidder.getUniqueId().equals(auctioneer)) { bidder.sendMessage(plugin.getMessage("auction-bid-self")); return; }
+        if (!isActive) {
+            bidder.sendMessage(plugin.getMessage("no-active-auction"));
+            return;
+        }
+        if (bidder.getUniqueId().equals(auctioneer)) {
+            bidder.sendMessage(plugin.getMessage("auction-bid-self"));
+            return;
+        }
 
         double nextBid = type.equalsIgnoreCase("x2") ? currentBid * 2 : currentBid * 1.10;
         
-        // Verifica se o licitante tem saldo no Vault
         if (!XPTweak.getEconomy().has(bidder, nextBid)) {
             bidder.sendMessage(plugin.getMessage("not-enough-money"));
             return;
@@ -76,25 +101,35 @@ public class AuctionManager {
         if (highestBidder == null) {
             Bukkit.broadcastMessage(plugin.getMessage("auction-no-winner"));
             Player seller = Bukkit.getPlayer(auctioneer);
-            if (seller != null) seller.setLevel(seller.getLevel() + amount);
+            if (seller != null && seller.isOnline()) {
+                seller.giveExp(pointsToTransfer); // Devolve os pontos exatos
+            }
         } else {
             Player winner = Bukkit.getPlayer(highestBidder);
             Player seller = Bukkit.getPlayer(auctioneer);
 
-            // Transação final via Vault
             if (winner != null && XPTweak.getEconomy().has(winner, currentBid)) {
                 XPTweak.getEconomy().withdrawPlayer(winner, currentBid);
                 if (seller != null) XPTweak.getEconomy().depositPlayer(seller, currentBid);
                 
-                winner.setLevel(winner.getLevel() + amount);
-                
+                // Entrega os pontos de XP, não o nível bruto
+                winner.giveExp(pointsToTransfer);
+
+                // Discord Report
+                String webhookUrl = plugin.getConfig().getString("webhooks.auctions");
+                plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-auction-report")
+                        .replace("{player}", seller != null ? seller.getName() : "Unknown")
+                        .replace("{amount}", String.valueOf(levelsToSell))
+                        .replace("{price}", String.format("%.2f", currentBid))
+                        .replace("{winner}", winner.getName()));
+
                 Bukkit.broadcastMessage(plugin.getMessage("auction-finished")
                         .replace("{player}", winner.getName())
                         .replace("{price}", String.format("%.2f", currentBid)));
             } else {
-                // Se o vencedor ficou sem dinheiro no último segundo
+                // Caso o vencedor não tenha fundos no fechamento
+                if (seller != null && seller.isOnline()) seller.giveExp(pointsToTransfer);
                 Bukkit.broadcastMessage("§c[XPTweak] Auction cancelled: Winner has insufficient funds.");
-                if (seller != null) seller.setLevel(seller.getLevel() + amount);
             }
         }
     }

@@ -15,14 +15,28 @@ public class TransactionManager {
         this.plugin = plugin;
     }
 
-    public void createRequest(Player sender, Player target, int amount) {
-        pendingDonations.put(target.getUniqueId(), new PendingDonate(sender.getUniqueId(), amount));
+    public void createRequest(Player sender, Player target, int levelsToGive) {
+        // Calcula quanto de XP real (pontos) esses níveis valem no nível ATUAL do doador
+        int currentXp = plugin.getXpManager().getTotalExperience(sender);
+        int xpAfterSubtraction = plugin.getXpManager().getExpAtLevel(sender.getLevel() - levelsToGive);
+        int pointsToTransfer = currentXp - xpAfterSubtraction;
+
+        if (pointsToTransfer <= 0) {
+            sender.sendMessage(plugin.getMessage("not-enough-xp"));
+            return;
+        }
+
+        pendingDonations.put(target.getUniqueId(), new PendingDonate(sender.getUniqueId(), levelsToGive, pointsToTransfer));
+        
         sender.sendMessage(plugin.getMessage("donate-sent").replace("{player}", target.getName()));
-        target.sendMessage(plugin.getMessage("donate-received").replace("{player}", sender.getName()).replace("{amount}", String.valueOf(amount)));
+        target.sendMessage(plugin.getMessage("donate-received")
+                .replace("{player}", sender.getName())
+                .replace("{amount}", String.valueOf(levelsToGive)));
     }
 
     public void acceptRequest(Player target) {
         PendingDonate request = pendingDonations.remove(target.getUniqueId());
+        
         if (request == null) {
             target.sendMessage(plugin.getMessage("no-pending-donate"));
             return;
@@ -34,21 +48,27 @@ public class TransactionManager {
             return;
         }
 
-        if (sender.getLevel() < request.amount()) {
+        // Verifica se o doador ainda tem o XP necessário
+        if (sender.getLevel() < request.levels()) {
             target.sendMessage(plugin.getMessage("not-enough-xp-sender"));
+            sender.sendMessage(plugin.getMessage("not-enough-xp"));
             return;
         }
 
-        sender.setLevel(sender.getLevel() - request.amount());
-        target.setLevel(target.getLevel() + request.amount());
+        // Transfere os PONTOS exatos
+        sender.setLevel(sender.getLevel() - request.levels());
+        target.giveExp(request.points());
 
         // Discord Report
         String webhookUrl = plugin.getConfig().getString("webhooks.donations");
-        plugin.getDiscordWebhook().send(webhookUrl, "📜 **XP Donation**: " + sender.getName() + " donated " + request.amount() + " levels to " + target.getName());
+        plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-donate-report")
+                .replace("{sender}", sender.getName())
+                .replace("{amount}", String.valueOf(request.levels()))
+                .replace("{target}", target.getName()));
 
         sender.sendMessage(plugin.getMessage("donate-success-sender").replace("{player}", target.getName()));
         target.sendMessage(plugin.getMessage("donate-success-target").replace("{player}", sender.getName()));
     }
 
-    private record PendingDonate(UUID senderId, int amount) {}
+    private record PendingDonate(UUID senderId, int levels, int points) {}
 }

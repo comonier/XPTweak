@@ -3,6 +3,7 @@ package com.comonier.xptweak.utils;
 import com.comonier.xptweak.XPTweak;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -32,7 +33,6 @@ public class XPManager {
             lore.add("§eRight-click to claim exact XP");
             meta.setLore(lore);
             
-            // Armazena o XP TOTAL em pontos no NBT
             meta.getPersistentDataContainer().set(xpKey, PersistentDataType.INTEGER, totalPoints);
             bottle.setItemMeta(meta);
         }
@@ -43,8 +43,7 @@ public class XPManager {
         return xpKey;
     }
 
-    // Cálculos matemáticos para conversão exata
-    public int getTotalExperience(org.bukkit.entity.Player player) {
+    public int getTotalExperience(Player player) {
         int level = player.getLevel();
         float exp = player.getExp();
         int res = getExpAtLevel(level);

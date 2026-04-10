@@ -40,10 +40,8 @@ public class XPTweak extends JavaPlugin {
             return;
         }
 
-        // Primeira carga: cria arquivos se não existirem
         saveDefaultConfig();
         saveDefaultMessages();
-        
         reloadPluginConfig();
 
         this.databaseManager = new DatabaseManager(this);
@@ -78,7 +76,6 @@ public class XPTweak extends JavaPlugin {
         return econ != null;
     }
 
-    // Método para criar arquivos apenas se não existirem (sem WARN)
     private void saveDefaultMessages() {
         String[] langs = {"en", "pt", "es", "ru"};
         for (String lang : langs) {
@@ -91,12 +88,8 @@ public class XPTweak extends JavaPlugin {
 
     public void reloadPluginConfig() {
         try {
-            // Recarrega o config.yml do disco
             reloadConfig();
-            
-            // Recarrega as mensagens do disco
             loadLanguage();
-            
             if (xpRainManager != null) {
                 this.xpRainManager = new XPRainManager(this);
             }
@@ -110,7 +103,6 @@ public class XPTweak extends JavaPlugin {
         String lang = getConfig().getString("language", "en");
         File langFile = new File(getDataFolder(), "messages_" + lang + ".yml");
         if (!langFile.exists()) {
-            // Se o arquivo não existir fisicamente, tenta carregar o padrão EN
             langFile = new File(getDataFolder(), "messages_en.yml");
         }
         messages = YamlConfiguration.loadConfiguration(langFile);
@@ -120,6 +112,12 @@ public class XPTweak extends JavaPlugin {
         String msg = messages.getString(path, "Message missing: " + path);
         String prefix = messages.getString("prefix", "&8[&aXPTweak&8] ");
         return ChatColor.translateAlternateColorCodes('&', prefix + msg);
+    }
+
+    // Método para pegar a mensagem pura para o Discord (sem prefixo e sem cores para Webhook)
+    public String getMessageRaw(String path) {
+        if (messages == null) return "Messages not loaded";
+        return messages.getString(path, "Message missing: " + path);
     }
 
     public static Economy getEconomy() { return econ; }
