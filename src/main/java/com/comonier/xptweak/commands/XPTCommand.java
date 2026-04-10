@@ -7,6 +7,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.List;
+
 public class XPTCommand implements CommandExecutor {
 
     private final XPTweak plugin;
@@ -23,19 +25,16 @@ public class XPTCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        // Comando de Reload disponível para Console e Players com permissão
         if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
             admin.handleReload(sender);
             return true;
         }
 
-        // Restante dos comandos apenas para jogadores
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Only players can execute XP management commands.");
             return true;
         }
 
-        // Menu de ajuda se não houver argumentos ou digitar /xpt help
         if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
             sendHelp(player);
             return true;
@@ -86,7 +85,15 @@ public class XPTCommand implements CommandExecutor {
     }
 
     private void sendHelp(Player player) {
-        for (String line : plugin.getConfig().getStringList("help-menu")) {
+        // Agora lê do arquivo de mensagens carregado, não do config.yml
+        List<String> helpLines = plugin.getMessagesConfig().getStringList("help-menu");
+        
+        if (helpLines.isEmpty()) {
+            player.sendMessage("§cHelp menu not found in language file.");
+            return;
+        }
+
+        for (String line : helpLines) {
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', line));
         }
     }

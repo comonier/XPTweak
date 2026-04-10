@@ -26,12 +26,22 @@ public class EconomyHandler {
             player.sendMessage(plugin.getMessage("player-not-found"));
             return;
         }
+
         try {
             int amount = Integer.parseInt(args[2]);
+            // Voltamos ao fluxo normal sem 'confirm' para o Give direto
             plugin.getTransactionManager().createRequest(player, target, amount);
         } catch (NumberFormatException e) {
             player.sendMessage(plugin.getMessage("invalid-number"));
         }
+    }
+
+    public void handleAccept(Player player) {
+        if (!player.hasPermission("xptweak.user.give")) {
+            player.sendMessage(plugin.getMessage("no-permission"));
+            return;
+        }
+        plugin.getTransactionManager().acceptRequest(player);
     }
 
     public void handleAuction(Player player, String[] args) {
@@ -39,12 +49,10 @@ public class EconomyHandler {
             player.sendMessage(plugin.getMessage("no-permission"));
             return;
         }
-
         if (args.length >= 2 && args[1].equalsIgnoreCase("list")) {
             plugin.getAuctionManager().toggleMessages(player);
             return;
         }
-
         if (args.length < 3) {
             player.sendMessage(plugin.getMessage("syntax-auc"));
             return;

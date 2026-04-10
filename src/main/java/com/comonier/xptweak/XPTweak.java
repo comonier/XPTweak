@@ -41,14 +41,12 @@ public class XPTweak extends JavaPlugin {
         saveDefaultConfig();
         saveDefaultMessages();
         
-        // Inicialização básica primeiro
         this.databaseManager = new DatabaseManager(this);
         this.discordWebhook = new DiscordWebhook(this);
         this.xpManager = new XPManager(this);
         this.transactionManager = new TransactionManager(this);
         this.auctionManager = new AuctionManager(this);
         
-        // Carrega idioma e inicia o RainManager
         reloadPluginConfig();
 
         XPTCommand xptCmd = new XPTCommand(this);
@@ -88,7 +86,6 @@ public class XPTweak extends JavaPlugin {
             reloadConfig();
             loadLanguage();
             
-            // CORREÇÃO: Cancela as tarefas antigas antes de recriar o agendador da chuva
             if (xpRainManager != null) {
                 getServer().getScheduler().cancelTasks(this);
             }
@@ -116,6 +113,11 @@ public class XPTweak extends JavaPlugin {
     public String getMessageRaw(String path) {
         if (messages == null) return "Messages not loaded";
         return messages.getString(path, "Missing message: " + path);
+    }
+
+    // Getter necessário para o XPTCommand acessar a lista de ajuda
+    public FileConfiguration getMessagesConfig() {
+        return messages;
     }
 
     public static Economy getEconomy() { return econ; }

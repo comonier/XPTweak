@@ -39,3 +39,18 @@ webhook-rain-started: "⚡ **¡La lluvia de XP HA EMPEZADO!** ¡Corred a la aren
 webhook-donate-report: "📜 **Donación de XP**: {sender} donó {amount} niveles a {target} ({points} puntos)."
 webhook-auction-report: "💰 **Subasta de XP**: {player} vendió {amount} niveles por {price} a {winner} ({points} puntos)."
 webhook-bottle-storage: "🍾 **Almacenamiento**: {player} guardó {amount} niveles en una botella ({points} puntos)."
+
+# Help Menu
+help-menu:
+  - "&a--- Ayuda XPTweak ---"
+  - "&e/xpt max &7- Guarda todo tu XP en botellas vanilla"
+  - "&e/xpt lvl <cantidad> &7- Guarda niveles en botellas vanilla"
+  - "&e/xptc max &7- Crea botella NBT con todo tu XP"
+  - "&e/xptc lvl <cantidad> &7- Crea botella NBT con niveles específicos"
+  - "&e/xpt give <jugador> <cantidad> &7- Donar XP a otro jugador"
+  - "&e/xpt accept &7- Aceptar una donación de XP pendiente"
+  - "&e/xpt auc <lvl> <precio> &7- Iniciar una subasta de XP"
+  - "&e/xpt auc list &7- Alternar alertas de subasta en el chat"
+  - "&e/xpt bid [x1|x2] &7- Pujar en la subasta activa"
+  - "&e/xpt rain <cantidad> <tiempo> &7- Lluvia de XP (Admin)"
+  - "&e/xpt reload &7- Recargar configuraciones (Admin)"

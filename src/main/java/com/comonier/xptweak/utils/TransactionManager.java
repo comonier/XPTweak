@@ -16,6 +16,7 @@ public class TransactionManager {
     }
 
     public void createRequest(Player sender, Player target, int levelsToGive) {
+        // Como o Give dá XP direto na barra, não checamos inventário aqui.
         int currentXp = plugin.getXpManager().getTotalExperience(sender);
         int xpAfterSubtraction = plugin.getXpManager().getExpAtLevel(sender.getLevel() - levelsToGive);
         int pointsToTransfer = currentXp - xpAfterSubtraction;
@@ -35,6 +36,7 @@ public class TransactionManager {
 
     public void acceptRequest(Player target) {
         PendingDonate request = pendingDonations.remove(target.getUniqueId());
+        
         if (request == null) {
             target.sendMessage(plugin.getMessage("no-pending-donate"));
             return;
@@ -51,10 +53,15 @@ public class TransactionManager {
             return;
         }
 
+        // Execução direta na barra de XP
         sender.setLevel(sender.getLevel() - request.levels());
         target.giveExp(request.points());
 
-        // Webhook Discord
+        // Webhook e Mensagens de sucesso
+        sendSuccessLogs(sender, target, request);
+    }
+
+    private void sendSuccessLogs(Player sender, Player target, PendingDonate request) {
         String webhookUrl = plugin.getConfig().getString("webhooks.donations");
         plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-donate-report")
                 .replace("{sender}", sender.getName())
@@ -62,7 +69,6 @@ public class TransactionManager {
                 .replace("{target}", target.getName())
                 .replace("{points}", String.valueOf(request.points())));
 
-        // Mensagens no Chat com Pontos
         sender.sendMessage(plugin.getMessage("donate-success-sender")
                 .replace("{player}", target.getName())
                 .replace("{amount}", String.valueOf(request.levels()))
