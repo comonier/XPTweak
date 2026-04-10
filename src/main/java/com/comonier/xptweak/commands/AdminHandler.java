@@ -18,7 +18,8 @@ public class AdminHandler {
             return;
         }
         plugin.reloadPluginConfig();
-        sender.sendMessage("§a[XPTweak] Configuration and Messages reloaded!");
+        // Agora usa a chave de mensagem com o prefixo cinza padronizado
+        sender.sendMessage(plugin.getMessage("reload-success"));
     }
 
     public void handleManualRain(Player player, String[] args) {

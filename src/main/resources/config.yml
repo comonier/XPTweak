@@ -60,13 +60,15 @@ auction-regressive: true
 # 3. Add the custom flag: /rg flag <region_name> xpt-rain allow
 # 4. Set the exact region name in the 'region-name' field below.
 #
-# The plugin will calculate the area (even 8x8 chunks) and spawn orbs
-# randomly across the entire region falling from the sky.
+# ANNOUNCEMENT LOGIC (Controlled by messages_XX.yml):
+# - DISCORD: Sent at 30, 15, 10, and 5 minutes before the event.
+# - IN-GAME: Sent at 30, 15, 10, 5, 4, 3, 2, 1 minutes and 30 seconds.
 # ==============================================================================
 xp-rain:
   enabled: true
   
   # Set to false to test the rain logic without broadcasting chat messages.
+  # Note: Discord webhooks will still be sent if a URL is configured above.
   announcement-enabled: false
   
   # Scheduled times in 24h format.
@@ -81,9 +83,6 @@ xp-rain:
   
   # Total amount of XP orbs to spawn during the scheduled rain.
   total-orbs: 500
-  
-  # Countdown message ({time} is replaced by the interval).
-  announcement-message: "XP RAIN IN {time} at the Arena!"
 
 # ==============================================================================
 # CUSTOMIZABLE HELP MENU
@@ -101,8 +100,6 @@ help-menu:
 
 # ==============================================================================
 # PERMISSIONS REFERENCE
-# Note: Permissions are ENABLED by default for users unless changed in a 
-# permissions plugin (like LuckPerms).
 # ==============================================================================
 # [USER PERMISSIONS]
 # xptweak.user.base    - Access to /xpt help and /xpt accept (Default: true)
@@ -114,8 +111,4 @@ help-menu:
 # [ADMIN PERMISSIONS]
 # xptweak.admin.reload - Access to /xpt reload (Default: OP)
 # xptweak.admin.rain   - Access to /xpt rain manual command (Default: OP)
-#
-# [WILDCARDS]
-# xptweak.user.*  - Grants all user features
-# xptweak.admin.* - Grants all features + Admin commands
 # ==============================================================================

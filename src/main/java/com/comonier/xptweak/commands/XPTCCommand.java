@@ -50,24 +50,27 @@ public class XPTCCommand implements CommandExecutor {
         int xpAfterSubtraction = plugin.getXpManager().getExpAtLevel(player.getLevel() - levelsToStore);
         int finalPoints = currentTotalXp - xpAfterSubtraction;
 
-        ItemStack customBottle = plugin.getXpManager().createCustomBottle(player.getName(), levelsToStore, finalPoints);
-        
         if (player.getInventory().firstEmpty() == -1) {
             player.sendMessage(plugin.getMessage("inventory-full"));
             return true;
         }
 
+        ItemStack customBottle = plugin.getXpManager().createCustomBottle(player.getName(), levelsToStore, finalPoints);
         player.setLevel(player.getLevel() - levelsToStore);
         player.getInventory().addItem(customBottle);
 
-        // Report Discord
+        // Discord Webhook
         String webhookUrl = plugin.getConfig().getString("webhooks.donations");
         plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-bottle-storage")
                 .replace("{player}", player.getName())
                 .replace("{amount}", String.valueOf(levelsToStore))
                 .replace("{points}", String.valueOf(finalPoints)));
         
-        player.sendMessage(plugin.getMessage("xp-custom-bottle").replace("{amount}", String.valueOf(levelsToStore)));
+        // Chat com Pontos
+        player.sendMessage(plugin.getMessage("xp-custom-bottle")
+                .replace("{amount}", String.valueOf(levelsToStore))
+                .replace("{points}", String.valueOf(finalPoints)));
+
         return true;
     }
 }

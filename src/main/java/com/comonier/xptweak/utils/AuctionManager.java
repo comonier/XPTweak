@@ -92,7 +92,7 @@ public class AuctionManager {
                 
                 winner.giveExp(pointsToTransfer);
 
-                // Report Discord
+                // Discord Report
                 String webhookUrl = plugin.getConfig().getString("webhooks.auctions");
                 plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-auction-report")
                         .replace("{player}", seller != null ? seller.getName() : "Unknown")
@@ -101,8 +101,24 @@ public class AuctionManager {
                         .replace("{winner}", winner.getName())
                         .replace("{points}", String.valueOf(pointsToTransfer)));
 
-                Bukkit.broadcastMessage(plugin.getMessage("auction-finished").replace("{player}", winner.getName()).replace("{price}", String.format("%.2f", currentBid)));
+                // Mensagens Chat
+                winner.sendMessage(plugin.getMessage("auction-win")
+                        .replace("{amount}", String.valueOf(levelsToSell))
+                        .replace("{points}", String.valueOf(pointsToTransfer)));
+                
+                if (seller != null) {
+                    seller.sendMessage(plugin.getMessage("auction-sold")
+                        .replace("{price}", String.format("%.2f", currentBid))
+                        .replace("{points}", String.valueOf(pointsToTransfer)));
+                }
+
+                Bukkit.broadcastMessage(plugin.getMessage("auction-finished")
+                        .replace("{player}", winner.getName())
+                        .replace("{price}", String.format("%.2f", currentBid))
+                        .replace("{points}", String.valueOf(pointsToTransfer)));
             }
         }
     }
+
+    public boolean isActive() { return isActive; }
 }

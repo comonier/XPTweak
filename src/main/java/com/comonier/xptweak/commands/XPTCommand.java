@@ -23,19 +23,19 @@ public class XPTCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        // Handle Reload (Available for Console and Players with permission)
+        // Comando de Reload disponível para Console e Players com permissão
         if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
             admin.handleReload(sender);
             return true;
         }
 
-        // From here on, only Players can execute the subcommands
+        // Restante dos comandos apenas para jogadores
         if (!(sender instanceof Player player)) {
-            sender.sendMessage("Only players can use XP management commands.");
+            sender.sendMessage("Only players can execute XP management commands.");
             return true;
         }
 
-        // Show help menu if no arguments are provided
+        // Menu de ajuda se não houver argumentos ou digitar /xpt help
         if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
             sendHelp(player);
             return true;
@@ -86,7 +86,6 @@ public class XPTCommand implements CommandExecutor {
     }
 
     private void sendHelp(Player player) {
-        // Loads the customizable help menu from config.yml
         for (String line : plugin.getConfig().getStringList("help-menu")) {
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', line));
         }

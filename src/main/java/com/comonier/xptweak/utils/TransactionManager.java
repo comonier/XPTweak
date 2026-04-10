@@ -35,7 +35,6 @@ public class TransactionManager {
 
     public void acceptRequest(Player target) {
         PendingDonate request = pendingDonations.remove(target.getUniqueId());
-        
         if (request == null) {
             target.sendMessage(plugin.getMessage("no-pending-donate"));
             return;
@@ -52,11 +51,10 @@ public class TransactionManager {
             return;
         }
 
-        // Transfere pontos exatos para evitar inflação de níveis
         sender.setLevel(sender.getLevel() - request.levels());
         target.giveExp(request.points());
 
-        // Report Discord
+        // Webhook Discord
         String webhookUrl = plugin.getConfig().getString("webhooks.donations");
         plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-donate-report")
                 .replace("{sender}", sender.getName())
@@ -64,8 +62,16 @@ public class TransactionManager {
                 .replace("{target}", target.getName())
                 .replace("{points}", String.valueOf(request.points())));
 
-        sender.sendMessage(plugin.getMessage("donate-success-sender").replace("{player}", target.getName()));
-        target.sendMessage(plugin.getMessage("donate-success-target").replace("{player}", sender.getName()));
+        // Mensagens no Chat com Pontos
+        sender.sendMessage(plugin.getMessage("donate-success-sender")
+                .replace("{player}", target.getName())
+                .replace("{amount}", String.valueOf(request.levels()))
+                .replace("{points}", String.valueOf(request.points())));
+                
+        target.sendMessage(plugin.getMessage("donate-success-target")
+                .replace("{player}", sender.getName())
+                .replace("{amount}", String.valueOf(request.levels()))
+                .replace("{points}", String.valueOf(request.points())));
     }
 
     private record PendingDonate(UUID senderId, int levels, int points) {}

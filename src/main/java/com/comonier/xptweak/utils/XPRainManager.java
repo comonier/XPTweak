@@ -12,6 +12,7 @@ import org.bukkit.World;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.time.Duration;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -32,50 +33,60 @@ public class XPRainManager {
         new BukkitRunnable() {
             @Override
             public void run() {
-                String currentTime = LocalTime.now().format(timeFormatter);
+                LocalTime now = LocalTime.now().withSecond(0).withNano(0);
                 List<String> scheduledTimes = plugin.getConfig().getStringList("xp-rain.times");
 
-                if (scheduledTimes.contains(currentTime)) {
-                    startCountdown();
+                for (String timeStr : scheduledTimes) {
+                    try {
+                        LocalTime rainTime = LocalTime.parse(timeStr, timeFormatter);
+                        long diffMinutes = Duration.between(now, rainTime).toMinutes();
+
+                        if (diffMinutes < 0) diffMinutes += 1440;
+
+                        handleAnnouncements(diffMinutes);
+                        
+                        if (diffMinutes == 0) {
+                            String webhookUrl = plugin.getConfig().getString("webhooks.xp-rain");
+                            plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-rain-started"));
+                            executeRain(plugin.getConfig().getInt("xp-rain.total-orbs", 500), 10);
+                        }
+                    } catch (Exception e) {
+                        plugin.getLogger().warning("Invalid time format in config: " + timeStr);
+                    }
                 }
             }
         }.runTaskTimer(plugin, 0L, 1200L);
     }
 
-    private void startCountdown() {
-        int[] intervals = {1800, 900, 600, 300, 240, 180, 120, 60, 30, 10, 5, 4, 3, 2, 1};
+    private void handleAnnouncements(long minutesLeft) {
         String webhookUrl = plugin.getConfig().getString("webhooks.xp-rain");
+        String timeDisplay = formatMinutes(minutesLeft);
 
-        for (int seconds : intervals) {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    String timeStr = formatTime(seconds);
-                    
-                    // Alerta no In-Game (se ativado)
-                    if (plugin.getConfig().getBoolean("xp-rain.announcement-enabled", false)) {
-                        String rawMsg = plugin.getConfig().getString("xp-rain.announcement-message", "XP RAIN IN {time}");
-                        Bukkit.broadcastMessage(plugin.getMessage("prefix") + rawMsg.replace("{time}", timeStr));
-                    }
-
-                    // Alerta no Discord (Sempre tenta enviar se houver Webhook)
-                    String discordMsg = plugin.getMessageRaw("webhook-rain-announcement")
-                            .replace("{time}", timeStr);
-                    plugin.getDiscordWebhook().send(webhookUrl, discordMsg);
-                }
-            }.runTaskLater(plugin, (1800 - seconds) * 20L);
+        // DISCORD ANNOUNCEMENTS (30, 15, 10, 5)
+        if (minutesLeft == 30 || minutesLeft == 15 || minutesLeft == 10 || minutesLeft == 5) {
+            String discordMsg = plugin.getMessageRaw("webhook-rain-announcement").replace("{time}", timeDisplay);
+            plugin.getDiscordWebhook().send(webhookUrl, discordMsg);
         }
 
-        // Início da Chuva
-        new BukkitRunnable() {
-            @Override
-            public void run() {
-                // Mensagem de início no Discord
-                plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-rain-started"));
+        // IN-GAME ANNOUNCEMENTS (30, 15, 10, 5, 4, 3, 2, 1, 30s)
+        if (plugin.getConfig().getBoolean("xp-rain.announcement-enabled", false)) {
+            if (minutesLeft == 30 || minutesLeft == 15 || minutesLeft == 10 || 
+                minutesLeft == 5 || minutesLeft == 4 || minutesLeft == 3 || 
+                minutesLeft == 2 || minutesLeft == 1) {
                 
-                executeRain(plugin.getConfig().getInt("xp-rain.total-orbs", 500), 10);
+                // Correção: plugin.getMessage() já traz o prefixo. Não concatenar outro manualmente.
+                Bukkit.broadcastMessage(plugin.getMessage("in-game-rain-announcement").replace("{time}", timeDisplay));
+                
+                if (minutesLeft == 1) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            Bukkit.broadcastMessage(plugin.getMessage("in-game-rain-announcement").replace("{time}", "30 seconds"));
+                        }
+                    }.runTaskLater(plugin, 600L);
+                }
             }
-        }.runTaskLater(plugin, 1800 * 20L);
+        }
     }
 
     public void executeRain(int totalAmount, int durationSeconds) {
@@ -86,7 +97,6 @@ public class XPRainManager {
 
         RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
         RegionManager regions = container.get(com.sk89q.worldedit.bukkit.BukkitAdapter.adapt(world));
-        
         if (regions == null || !regions.hasRegion(regionName)) return;
 
         ProtectedRegion region = regions.getRegion(regionName);
@@ -99,14 +109,12 @@ public class XPRainManager {
         new BukkitRunnable() {
             int ticksElapsed = 0;
             int spawnedOrbs = 0;
-
             @Override
             public void run() {
                 if (ticksElapsed >= totalTicks || spawnedOrbs >= totalAmount) {
                     this.cancel();
                     return;
                 }
-
                 for (int i = 0; i < orbsPerTick; i++) {
                     if (spawnedOrbs >= totalAmount) break;
                     int x = random.nextInt((max.getX() - min.getX()) + 1) + min.getX();
@@ -120,8 +128,8 @@ public class XPRainManager {
         }.runTaskTimer(plugin, 0L, 1L);
     }
 
-    private String formatTime(int seconds) {
-        if (seconds >= 60) return (seconds / 60) + " minutes";
-        return seconds + " seconds";
+    private String formatMinutes(long minutes) {
+        if (minutes == 1) return "1 minute";
+        return minutes + " minutes";
     }
 }
