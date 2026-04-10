@@ -2,6 +2,7 @@ package com.comonier.xptweak.utils;
 
 import com.comonier.xptweak.XPTweak;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -16,9 +17,11 @@ public class DiscordWebhook {
     }
 
     public void send(String urlString, String content) {
-        if (urlString == null || urlString.isEmpty() || urlString.equals("YOUR_WEBHOOK_URL")) return;
+        if (urlString == null || urlString.isEmpty() || urlString.equalsIgnoreCase("NONE")) return;
 
-        // Executa de forma assíncrona para não lagar o servidor/Folia
+        // Limpa códigos de cores (ex: &a ou §a) para o Discord
+        String cleanContent = ChatColor.stripColor(content);
+
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             try {
                 URL url = new URL(urlString);
@@ -27,14 +30,15 @@ public class DiscordWebhook {
                 connection.setRequestProperty("Content-Type", "application/json");
                 connection.setDoOutput(true);
 
-                String jsonPayload = "{\"content\": \"" + content + "\"}";
+                // Escapa aspas para não quebrar o JSON
+                String jsonPayload = "{\"content\": \"" + cleanContent.replace("\"", "\\\"") + "\"}";
 
                 try (OutputStream os = connection.getOutputStream()) {
                     byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
                     os.write(input, 0, input.length);
                 }
 
-                connection.getResponseCode(); // Trigger request
+                connection.getResponseCode();
                 connection.disconnect();
             } catch (Exception e) {
                 plugin.getLogger().warning("Failed to send Discord Webhook: " + e.getMessage());

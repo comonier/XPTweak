@@ -29,3 +29,8 @@ syntax-lvl: "&cUsage: /xpt lvl <amount>"
 syntax-give: "&cUsage: /xpt give <player> <amount>"
 syntax-auc: "&cUsage: /xpt auc <levels> <starting_price>"
 manual-rain-started: "&aManual XP Rain started: &e{amount} &aorbs over &e{time} &aseconds!"
+# Webhook messages
+webhook-rain-announcement: "🌧️ **XP Rain Incoming!** The event will start in **{time}** in the designated arena."
+webhook-rain-started: "⚡ **XP Rain STARTED!** Run to the arena to collect your orbs!"
+webhook-donate-report: "📜 **XP Donation**: {sender} donated {amount} levels to {target}."
+webhook-auction-report: "💰 **XP Auction**: {player} sold {amount} levels for {price} to {winner}."

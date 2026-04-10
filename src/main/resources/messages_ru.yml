@@ -29,3 +29,8 @@ syntax-lvl: "&cИспользование: /xpt lvl <количество>"
 syntax-give: "&cИспользование: /xpt give <игрок> <количество>"
 syntax-auc: "&cИспользование: /xpt auc <уровни> <начальная_цена>"
 manual-rain-started: "&aРучной дождь опыта запущен: &e{amount} &aсфер на &e{time} &aсекунд!"
+# Сообщения Webhook
+webhook-rain-announcement: "🌧️ **Скоро дождь опыта!** Событие начнется через **{time}** на арене."
+webhook-rain-started: "⚡ **Дождь опыта НАЧАЛСЯ!** Бегите на арену за сферами!"
+webhook-donate-report: "📜 **Передача опыта**: {sender} передал {amount} уровней игроку {target}."
+webhook-auction-report: "💰 **Аукцион опыта**: {player} продал {amount} уровней за {price} игроку {winner}."
