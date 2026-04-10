@@ -34,16 +34,18 @@ public class XPTweak extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Inicializa Economia (Vault)
         if (!setupEconomy()) {
             getLogger().severe(String.format("[%s] - Disabled due to no Vault dependency found!", getDescription().getName()));
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
+        // Primeira carga: cria arquivos se não existirem
+        saveDefaultConfig();
+        saveDefaultMessages();
+        
         reloadPluginConfig();
 
-        // Inicializa Managers
         this.databaseManager = new DatabaseManager(this);
         this.discordWebhook = new DiscordWebhook(this);
         this.xpManager = new XPManager(this);
@@ -51,13 +53,11 @@ public class XPTweak extends JavaPlugin {
         this.auctionManager = new AuctionManager(this);
         this.xpRainManager = new XPRainManager(this);
 
-        // Registro de Comandos
         XPTCommand xptCmd = new XPTCommand(this);
         getCommand("xpt").setExecutor(xptCmd);
         getCommand("xpt").setTabCompleter(new TabCompleter());
         getCommand("xptc").setExecutor(new XPTCCommand(this));
         
-        // Registro de Eventos
         getServer().getPluginManager().registerEvents(new XPEventListener(this), this);
 
         getLogger().info("XPTweak 1.0 enabled successfully!");
@@ -78,22 +78,29 @@ public class XPTweak extends JavaPlugin {
         return econ != null;
     }
 
+    // Método para criar arquivos apenas se não existirem (sem WARN)
+    private void saveDefaultMessages() {
+        String[] langs = {"en", "pt", "es", "ru"};
+        for (String lang : langs) {
+            File file = new File(getDataFolder(), "messages_" + lang + ".yml");
+            if (!file.exists()) {
+                saveResource("messages_" + lang + ".yml", false);
+            }
+        }
+    }
+
     public void reloadPluginConfig() {
         try {
-            saveDefaultConfig();
-            getConfig().load(new File(getDataFolder(), "config.yml"));
+            // Recarrega o config.yml do disco
+            reloadConfig();
             
-            saveResource("messages_en.yml", false);
-            saveResource("messages_pt.yml", false);
-            saveResource("messages_es.yml", false);
-            saveResource("messages_ru.yml", false);
-            
+            // Recarrega as mensagens do disco
             loadLanguage();
             
             if (xpRainManager != null) {
                 this.xpRainManager = new XPRainManager(this);
             }
-        } catch (IOException | InvalidConfigurationException e) {
+        } catch (Exception e) {
             getLogger().severe("!!! CONFIGURATION ERROR !!!");
             getLogger().severe("Your config.yml is corrupted. Error: " + e.getMessage());
         }
@@ -102,7 +109,10 @@ public class XPTweak extends JavaPlugin {
     public void loadLanguage() {
         String lang = getConfig().getString("language", "en");
         File langFile = new File(getDataFolder(), "messages_" + lang + ".yml");
-        if (!langFile.exists()) langFile = new File(getDataFolder(), "messages_en.yml");
+        if (!langFile.exists()) {
+            // Se o arquivo não existir fisicamente, tenta carregar o padrão EN
+            langFile = new File(getDataFolder(), "messages_en.yml");
+        }
         messages = YamlConfiguration.loadConfiguration(langFile);
     }
 
@@ -112,7 +122,6 @@ public class XPTweak extends JavaPlugin {
         return ChatColor.translateAlternateColorCodes('&', prefix + msg);
     }
 
-    // Getters necessários para os Handlers e Managers
     public static Economy getEconomy() { return econ; }
     public XPManager getXpManager() { return xpManager; }
     public TransactionManager getTransactionManager() { return transactionManager; }
