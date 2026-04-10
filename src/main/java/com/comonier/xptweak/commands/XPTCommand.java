@@ -25,16 +25,19 @@ public class XPTCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        // Comando de Reload disponível para Console e Players com permissão
         if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
             admin.handleReload(sender);
             return true;
         }
 
+        // Restante dos comandos apenas para jogadores
         if (!(sender instanceof Player player)) {
             sender.sendMessage("Only players can execute XP management commands.");
             return true;
         }
 
+        // Menu de ajuda se não houver argumentos ou digitar /xpt help
         if (args.length == 0 || args[0].equalsIgnoreCase("help")) {
             sendHelp(player);
             return true;
@@ -45,7 +48,8 @@ public class XPTCommand implements CommandExecutor {
         switch (sub) {
             case "max":
             case "all":
-                storage.handleMax(player);
+                // CORREÇÃO: Passando o array 'args' para processar o 'confirm'
+                storage.handleMax(player, args);
                 break;
                 
             case "lvl":
@@ -57,11 +61,8 @@ public class XPTCommand implements CommandExecutor {
                 break;
                 
             case "accept":
-                if (!player.hasPermission("xptweak.user.give")) {
-                    player.sendMessage(plugin.getMessage("no-permission"));
-                    return true;
-                }
-                plugin.getTransactionManager().acceptRequest(player);
+                // Chamando via economy handler para manter o padrão
+                economy.handleAccept(player);
                 break;
                 
             case "auc":
@@ -85,10 +86,9 @@ public class XPTCommand implements CommandExecutor {
     }
 
     private void sendHelp(Player player) {
-        // Agora lê do arquivo de mensagens carregado, não do config.yml
         List<String> helpLines = plugin.getMessagesConfig().getStringList("help-menu");
         
-        if (helpLines.isEmpty()) {
+        if (helpLines == null || helpLines.isEmpty()) {
             player.sendMessage("§cHelp menu not found in language file.");
             return;
         }

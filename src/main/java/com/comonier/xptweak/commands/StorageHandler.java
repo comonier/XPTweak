@@ -5,15 +5,11 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 public class StorageHandler {
 
     private final XPTweak plugin;
-    private final Map<UUID, Long> confirmTimeout = new HashMap<>();
 
     public StorageHandler(XPTweak plugin) {
         this.plugin = plugin;
@@ -37,20 +33,16 @@ public class StorageHandler {
 
         boolean forceDrop = args.length > 1 && args[1].equalsIgnoreCase("confirm");
         
-        // Verifica se cabe no inventário
         if (!hasInventorySpace(player, bottleCount) && !forceDrop) {
             player.sendMessage(plugin.getMessage("inventory-full"));
-            player.sendMessage("§ePara dropar as garrafas no chão, digite: §b/xpt max confirm");
+            player.sendMessage(plugin.getMessage("inventory-full-confirm").replace("{command}", "/xpt max"));
             return;
         }
 
-        // Executa a ação
         player.setLevel(0);
         player.setExp(0);
         
         giveOrDropItems(player, new ItemStack(Material.EXPERIENCE_BOTTLE, bottleCount), forceDrop);
-
-        // Logs e Mensagens
         sendStorageLogs(player, levels, totalPoints);
     }
 
@@ -82,13 +74,12 @@ public class StorageHandler {
 
             if (!hasInventorySpace(player, bottleCount) && !forceDrop) {
                 player.sendMessage(plugin.getMessage("inventory-full"));
-                player.sendMessage("§ePara dropar as garrafas no chão, digite: §b/xpt lvl " + levelsToStore + " confirm");
+                player.sendMessage(plugin.getMessage("inventory-full-confirm").replace("{command}", "/xpt lvl " + levelsToStore));
                 return;
             }
 
             player.setLevel(player.getLevel() - levelsToStore);
             giveOrDropItems(player, new ItemStack(Material.EXPERIENCE_BOTTLE, bottleCount), forceDrop);
-
             sendStorageLogs(player, levelsToStore, pointsToRemove);
 
         } catch (NumberFormatException e) {

@@ -38,17 +38,23 @@ public class XPTweak extends JavaPlugin {
             return;
         }
 
+        // 1. Garante a criação da pasta e arquivos iniciais
         saveDefaultConfig();
         saveDefaultMessages();
         
+        // 2. Inicializa Gerenciadores de Dados
         this.databaseManager = new DatabaseManager(this);
         this.discordWebhook = new DiscordWebhook(this);
         this.xpManager = new XPManager(this);
         this.transactionManager = new TransactionManager(this);
-        this.auctionManager = new AuctionManager(this);
         
+        // 3. Carrega idioma e inicia recursos dependentes de config
         reloadPluginConfig();
+        
+        // 4. Inicializa leilão (depende do DB carregado)
+        this.auctionManager = new AuctionManager(this);
 
+        // 5. Registro de Comandos e Eventos
         XPTCommand xptCmd = new XPTCommand(this);
         getCommand("xpt").setExecutor(xptCmd);
         getCommand("xpt").setTabCompleter(new TabCompleter());
@@ -56,11 +62,12 @@ public class XPTweak extends JavaPlugin {
         
         getServer().getPluginManager().registerEvents(new XPEventListener(this), this);
 
-        getLogger().info("XPTweak has been enabled! Precision XP engine active.");
+        getLogger().info("XPTweak v1.1 has been enabled! System localized and safety engines active.");
     }
 
     @Override
     public void onDisable() {
+        // Cancela todas as tarefas (Chuva de XP, Lembretes, etc) antes de desligar
         getServer().getScheduler().cancelTasks(this);
         if (databaseManager != null) databaseManager.closeConnection();
     }
@@ -86,26 +93,44 @@ public class XPTweak extends JavaPlugin {
             reloadConfig();
             loadLanguage();
             
+            // Reinicia o Gerenciador de Chuva para aplicar novos horários/regiões
             if (xpRainManager != null) {
-                getServer().getScheduler().cancelTasks(this);
+                // Não cancelamos todas as tarefas aqui para não matar leilões ativos, 
+                // apenas reiniciamos a lógica da chuva.
+                xpRainManager = null; 
             }
             this.xpRainManager = new XPRainManager(this);
             
         } catch (Exception e) {
-            getLogger().severe("Critical error reloading config: " + e.getMessage());
+            getLogger().severe("Critical error reloading configuration: " + e.getMessage());
         }
     }
 
     public void loadLanguage() {
         String lang = getConfig().getString("language", "en");
         File langFile = new File(getDataFolder(), "messages_" + lang + ".yml");
-        if (!langFile.exists()) langFile = new File(getDataFolder(), "messages_en.yml");
+        
+        // Fallback para inglês caso o arquivo definido não exista
+        if (!langFile.exists()) {
+            langFile = new File(getDataFolder(), "messages_en.yml");
+        }
+        
         messages = YamlConfiguration.loadConfiguration(langFile);
     }
 
+    /**
+     * Retorna a configuração de mensagens atual (necessário para listas como o help-menu).
+     */
+    public FileConfiguration getMessagesConfig() {
+        return messages;
+    }
+
     public String getMessage(String path) {
+        if (messages == null) return "Messages not loaded";
         String msg = messages.getString(path, "Missing message: " + path);
+        
         if (path.equals("prefix")) return ChatColor.translateAlternateColorCodes('&', msg);
+        
         String prefix = messages.getString("prefix", "&8[&aXPTweak&8] ");
         return ChatColor.translateAlternateColorCodes('&', prefix + msg);
     }
@@ -115,11 +140,7 @@ public class XPTweak extends JavaPlugin {
         return messages.getString(path, "Missing message: " + path);
     }
 
-    // Getter necessário para o XPTCommand acessar a lista de ajuda
-    public FileConfiguration getMessagesConfig() {
-        return messages;
-    }
-
+    // Getters
     public static Economy getEconomy() { return econ; }
     public XPManager getXpManager() { return xpManager; }
     public TransactionManager getTransactionManager() { return transactionManager; }

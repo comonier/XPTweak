@@ -1,6 +1,8 @@
 prefix: "&8[&aXPTweak&8] "
 no-permission: "&c¡No tienes permiso para hacer esto!"
 inventory-full: "&c¡Tu inventario está lleno! Haz espacio."
+inventory-full-confirm: "&ePara soltar las botellas al suelo, escribe: &b{command} confirm"
+inventory-full-target: "&c¡El jugador {player} no tiene espacio en el inventario!"
 not-enough-xp: "&c¡No tienes suficientes niveles de XP!"
 not-enough-xp-sender: "&cEl remitente ya no tiene el XP requerido."
 not-enough-money: "&c¡No tienes suficiente dinero para esta puja!"
