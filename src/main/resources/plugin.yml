@@ -1,0 +1,57 @@
+name: XPTweak
+version: '${project.version}'
+main: com.comonier.xptweak.XPTweak
+api-version: '1.19'
+description: Advanced XP management system with auctions, donations, and XP rain.
+author: comonier
+folia-supported: true
+
+commands:
+  xpt:
+    description: Main command for XP management.
+    aliases: [xp, xptweak]
+    usage: /xpt help
+  xptc:
+    description: Create custom NBT XP bottles.
+    usage: /xptc <max|lvl> <amount>
+
+permissions:
+  # Permissões de Usuário
+  xptweak.user.base:
+    description: Permite acessar o menu de ajuda.
+    default: true
+  xptweak.user.store:
+    description: Permite guardar XP em garrafas (max/lvl).
+    default: true
+  xptweak.user.give:
+    description: Permite doar e aceitar doações de XP.
+    default: true
+  xptweak.user.auction:
+    description: Permite participar e iniciar leilões de XP.
+    default: true
+  xptweak.user.custom:
+    description: Permite criar garrafas de XP customizadas (NBT).
+    default: op
+
+  # Permissões de Administrador
+  xptweak.admin.reload:
+    description: Permite recarregar as configurações do plugin.
+    default: op
+  xptweak.admin.rain:
+    description: Permite iniciar a chuva de XP manualmente.
+    default: op
+
+  # Agrupamentos (Wildcards)
+  xptweak.user.*:
+    description: Concede todas as permissões de usuário.
+    children:
+      xptweak.user.base: true
+      xptweak.user.store: true
+      xptweak.user.give: true
+      xptweak.user.auction: true
+  xptweak.admin.*:
+    description: Concede todas as permissões de administrador.
+    children:
+      xptweak.admin.reload: true
+      xptweak.admin.rain: true
+      xptweak.user.*: true

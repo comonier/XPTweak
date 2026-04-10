@@ -1,0 +1,23 @@
+Listagem de caminhos de pasta
+O n£mero de s‚rie do volume ‚ 44E2-1797
+C:.
+|   .gitignore
+|   lista.txt
+|   pom.xml
+|   
+\---src
+    \---main
+        +---java
+        |   \---com
+        |       \---comonier
+        |           \---xptweak
+        |                   XPTweak.java
+        |                   
+        \---resources
+                config.yml
+                messages_en.yml
+                messages_es.yml
+                messages_pt.yml
+                messages_ru.yml
+                plugin.yml
+                

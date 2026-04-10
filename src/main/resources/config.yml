@@ -1,0 +1,121 @@
+# ==============================================================================
+# XPTweak Configuration File - COMPLETE VERSION
+# ==============================================================================
+
+# Language file to use. Options: en, pt, es, ru
+language: "en"
+
+# Feature: Drop XP Bottle on Death
+# If true, players drop a custom bottle with 100% of their XP upon death.
+drop-xp-bottle-on-death: true
+
+# ==============================================================================
+# DATABASE SETTINGS
+# ==============================================================================
+# Choose where the plugin should store transaction logs and data.
+# 
+# OPTION 1: SQLITE (Default) - Local file (database.db).
+# OPTION 2: MYSQL - External server (Ideal for networks).
+#
+# EXAMPLE FOR MYSQL SETUP:
+# type: "MYSQL"
+# host: "127.0.0.1"
+# port: 3306
+# name: "minecraft_db"
+# user: "admin"
+# password: "password"
+# ==============================================================================
+database:
+  type: "SQLITE"
+  host: "localhost"
+  port: 3306
+  name: "xptweak"
+  user: "root"
+  password: ""
+
+# ==============================================================================
+# DISCORD WEBHOOKS
+# Reports events to your Discord channels. 
+# Leave the field as "NONE" or empty to disable a specific report.
+# ==============================================================================
+webhooks:
+  donations: "NONE"
+  auctions: "NONE"
+  xp-rain: "NONE"
+
+# ==============================================================================
+# AUCTION SETTINGS
+# ==============================================================================
+# Time in seconds for the auction to end if no one bids.
+auction-time: 10
+# If true, each new bid reduces the remaining time by 1 second.
+auction-regressive: true
+
+# ==============================================================================
+# XP RAIN SETUP GUIDE (WorldGuard + WorldEdit)
+# ==============================================================================
+# To make the XP Rain work independently of players being online:
+# 1. Use the WorldEdit wand (//wand) to select two corners.
+# 2. Define a region: /rg define <region_name>
+# 3. Add the custom flag: /rg flag <region_name> xpt-rain allow
+# 4. Set the exact region name in the 'region-name' field below.
+#
+# The plugin will calculate the area (even 8x8 chunks) and spawn orbs
+# randomly across the entire region falling from the sky.
+# ==============================================================================
+xp-rain:
+  enabled: true
+  
+  # Set to false to test the rain logic without broadcasting chat messages.
+  announcement-enabled: false
+  
+  # Scheduled times in 24h format.
+  times:
+    - "12:00"
+    - "18:00"
+    - "00:00"
+    
+  # World and WorldGuard Region name.
+  world: "world"
+  region-name: "xp_arena"
+  
+  # Total amount of XP orbs to spawn during the scheduled rain.
+  total-orbs: 500
+  
+  # Countdown message ({time} is replaced by the interval).
+  announcement-message: "XP RAIN IN {time} at the Arena!"
+
+# ==============================================================================
+# CUSTOMIZABLE HELP MENU
+# ==============================================================================
+help-menu:
+  - "&a--- XPTweak Help ---"
+  - "&e/xpt max &7- Store all your XP in vanilla bottles"
+  - "&e/xpt lvl <amount> &7- Store specific levels in bottles"
+  - "&e/xpt give <player> <amount> &7- Donate XP to another player"
+  - "&e/xpt accept &7- Accept a pending XP donation"
+  - "&e/xpt auc <lvl> <price> &7- Start an XP auction (Economy)"
+  - "&e/xpt bid [x1|x2] &7- Place a bid in the active auction"
+  - "&e/xpt rain <amount> <time> &7- Trigger manual XP rain (Admin)"
+  - "&e/xpt reload &7- Reload config and messages (Admin)"
+
+# ==============================================================================
+# PERMISSIONS REFERENCE
+# Note: Permissions are ENABLED by default for users unless changed in a 
+# permissions plugin (like LuckPerms).
+# ==============================================================================
+# [USER PERMISSIONS]
+# xptweak.user.base    - Access to /xpt help and /xpt accept (Default: true)
+# xptweak.user.store   - Access to /xpt max and /xpt lvl (Default: true)
+# xptweak.user.give    - Access to /xpt give (Default: true)
+# xptweak.user.auction - Access to /xpt auc and /xpt bid (Default: true)
+# xptweak.user.custom  - Access to /xptc (Custom NBT Bottles) (Default: OP)
+#
+# [ADMIN PERMISSIONS]
+# xptweak.admin.reload - Access to /xpt reload (Default: OP)
+# xptweak.admin.rain   - Access to /xpt rain manual command (Default: OP)
+#
+# [WILDCARDS]
+# xptweak.user.*  - Grants all user features
+# xptweak.admin.* - Grants all features + Admin commands
+# ==============================================================================
