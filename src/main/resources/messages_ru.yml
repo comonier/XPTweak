@@ -35,8 +35,19 @@ manual-rain-started: "&aРучной дождь опыта запущен: &e{am
 in-game-rain-announcement: "&aДождь опыта начнется через &e{time} &aна арене!"
 reload-success: "&aКонфигурация и сообщения успешно перезагружены!"
 
+# Новые ключи v1.2
+inventory-partial-info: "&6Инвентарь полон! &e{stored} &aур. сохранено, &e{remaining} &aосталось в полоске."
+next-rain-info: "&aСледующий дождь опыта через: &e{time}"
+xp-rain-countdown: "&aДождь опыта через: &e{time} {unit} &7- &b{instruction}"
+inspect-info: "&e{player} &aимеет &e{level} &aур. опыта | (&e{points}&a) очков опыта."
+
+# Единицы времени
+time-unit-minutes: "минут"
+time-unit-hours: "часов"
+time-unit-seconds: "секунд"
+
 # Webhooks
-webhook-rain-announcement: "🌧️ **Скоро дождь опыта!** Событие начнется через **{time}** на арене."
+webhook-rain-announcement: "🌧️ **Дождь опыта через:** {time} {unit} - {instruction}"
 webhook-rain-started: "⚡ **Дождь опыта НАЧАЛСЯ!** Бегите на арену за сферами!"
 webhook-donate-report: "📜 **Передача опыта**: {sender} передал {amount} уровней игроку {target} ({points} очков)."
 webhook-auction-report: "💰 **Аукцион опыта**: {player} продал {amount} уровней за {price} игроку {winner} ({points} очков)."
@@ -45,14 +56,17 @@ webhook-bottle-storage: "🍾 **Хранение**: {player} сохранил {a
 # Help Menu
 help-menu:
   - "&a--- Помощь XPTweak ---"
-  - "&e/xpt max &7- Сохранить весь опыт в обычные пузырьки"
-  - "&e/xpt lvl <кол-во> &7- Сохранить уровни в обычные пузырьки"
+  - "&e/xpt max &7- Сохранить весь опыт в пузырьки"
+  - "&e/xpt inv &7- Заполнить инв. пузырьками, остаток в полоске"
+  - "&e/xpt lvl <кол-во> &7- Сохранить уровни в пузырьки"
   - "&e/xptc max &7- Создать NBT пузырек со всем опытом"
   - "&e/xptc lvl <кол-во> &7- Создать NBT пузырек с уровнями"
-  - "&e/xpt give <игрок> <кол-во> &7- Передать опыт другому игроку"
-  - "&e/xpt accept &7- Принять запрос на передачу опыта"
+  - "&e/xpt give <игрок> <кол-во> &7- Передать опыт игроку"
+  - "&e/xpt accept &7- Принять запрос на опыт"
   - "&e/xpt auc <ур> <цена> &7- Начать аукцион опыта"
   - "&e/xpt auc list &7- Вкл/Выкл уведомления аукциона"
-  - "&e/xpt bid [x1|x2] &7- Сделать ставку на аукционе"
-  - "&e/xpt rain <кол-во> <время> &7- Запустить дождь опыта (Админ)"
-  - "&e/xpt reload &7- Перезагрузить конфигурацию (Админ)"
+  - "&e/xpt bid [x1|x2] &7- Сделать ставку"
+  - "&e/xpt time &7- Время до следующего дождя"
+  - "&e/xpt inspect <игрок> &7- Проверить опыт игрока"
+  - "&e/xpt rain <кол-во> <время> &7- Запустить дождь (Админ)"
+  - "&e/xpt reload &7- Перезагрузить конфиг (Админ)"

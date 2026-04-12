@@ -38,23 +38,18 @@ public class XPTweak extends JavaPlugin {
             return;
         }
 
-        // 1. Garante a criação da pasta e arquivos iniciais
         saveDefaultConfig();
         saveDefaultMessages();
         
-        // 2. Inicializa Gerenciadores de Dados
         this.databaseManager = new DatabaseManager(this);
         this.discordWebhook = new DiscordWebhook(this);
         this.xpManager = new XPManager(this);
         this.transactionManager = new TransactionManager(this);
         
-        // 3. Carrega idioma e inicia recursos dependentes de config
-        reloadPluginConfig();
-        
-        // 4. Inicializa leilão (depende do DB carregado)
+        loadLanguage();
         this.auctionManager = new AuctionManager(this);
+        this.xpRainManager = new XPRainManager(this);
 
-        // 5. Registro de Comandos e Eventos
         XPTCommand xptCmd = new XPTCommand(this);
         getCommand("xpt").setExecutor(xptCmd);
         getCommand("xpt").setTabCompleter(new TabCompleter());
@@ -62,12 +57,12 @@ public class XPTweak extends JavaPlugin {
         
         getServer().getPluginManager().registerEvents(new XPEventListener(this), this);
 
-        getLogger().info("XPTweak v1.1 has been enabled! System localized and safety engines active.");
+        // Log atualizado para refletir a v1.2 e o sistema de inspeção/inventário
+        getLogger().info("XPTweak v1.2 enabled! Inspect, Time and Partial Storage (INV) systems active.");
     }
 
     @Override
     public void onDisable() {
-        // Cancela todas as tarefas (Chuva de XP, Lembretes, etc) antes de desligar
         getServer().getScheduler().cancelTasks(this);
         if (databaseManager != null) databaseManager.closeConnection();
     }
@@ -93,16 +88,15 @@ public class XPTweak extends JavaPlugin {
             reloadConfig();
             loadLanguage();
             
-            // Reinicia o Gerenciador de Chuva para aplicar novos horários/regiões
-            if (xpRainManager != null) {
-                // Não cancelamos todas as tarefas aqui para não matar leilões ativos, 
-                // apenas reiniciamos a lógica da chuva.
-                xpRainManager = null; 
-            }
+            // Cancela tarefas antigas para evitar as mensagens repetidas da chuva
+            getServer().getScheduler().cancelTasks(this);
+            
+            // Reinicia o sistema de chuva
             this.xpRainManager = new XPRainManager(this);
             
+            getLogger().info("XPTweak: Configuration and translations reloaded.");
         } catch (Exception e) {
-            getLogger().severe("Critical error reloading configuration: " + e.getMessage());
+            getLogger().severe("Critical error during reload: " + e.getMessage());
         }
     }
 
@@ -110,7 +104,6 @@ public class XPTweak extends JavaPlugin {
         String lang = getConfig().getString("language", "en");
         File langFile = new File(getDataFolder(), "messages_" + lang + ".yml");
         
-        // Fallback para inglês caso o arquivo definido não exista
         if (!langFile.exists()) {
             langFile = new File(getDataFolder(), "messages_en.yml");
         }
@@ -118,9 +111,6 @@ public class XPTweak extends JavaPlugin {
         messages = YamlConfiguration.loadConfiguration(langFile);
     }
 
-    /**
-     * Retorna a configuração de mensagens atual (necessário para listas como o help-menu).
-     */
     public FileConfiguration getMessagesConfig() {
         return messages;
     }
@@ -136,11 +126,10 @@ public class XPTweak extends JavaPlugin {
     }
 
     public String getMessageRaw(String path) {
-        if (messages == null) return "Messages not loaded";
-        return messages.getString(path, "Missing message: " + path);
+        if (messages == null) return "";
+        return messages.getString(path, "");
     }
 
-    // Getters
     public static Economy getEconomy() { return econ; }
     public XPManager getXpManager() { return xpManager; }
     public TransactionManager getTransactionManager() { return transactionManager; }

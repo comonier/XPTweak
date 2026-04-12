@@ -12,6 +12,36 @@ public class EconomyHandler {
         this.plugin = plugin;
     }
 
+    /**
+     * NOVO Comando /xpt inspect <player>
+     * Mostra os níveis e pontos exatos de XP de um jogador alvo.
+     */
+    public void handleInspect(Player admin, String[] args) {
+        if (!admin.hasPermission("xptweak.admin.inspect")) {
+            admin.sendMessage(plugin.getMessage("no-permission"));
+            return;
+        }
+
+        if (args.length < 2) {
+            admin.sendMessage("§cUsage: /xpt inspect <player>");
+            return;
+        }
+
+        Player target = Bukkit.getPlayer(args[1]);
+        if (target == null) {
+            admin.sendMessage(plugin.getMessage("player-not-found"));
+            return;
+        }
+
+        int levels = target.getLevel();
+        int points = plugin.getXpManager().getTotalExperience(target);
+
+        admin.sendMessage(plugin.getMessage("inspect-info")
+                .replace("{player}", target.getName())
+                .replace("{level}", String.valueOf(levels))
+                .replace("{points}", String.valueOf(points)));
+    }
+
     public void handleGive(Player player, String[] args) {
         if (!player.hasPermission("xptweak.user.give")) {
             player.sendMessage(plugin.getMessage("no-permission"));
@@ -26,10 +56,8 @@ public class EconomyHandler {
             player.sendMessage(plugin.getMessage("player-not-found"));
             return;
         }
-
         try {
             int amount = Integer.parseInt(args[2]);
-            // Voltamos ao fluxo normal sem 'confirm' para o Give direto
             plugin.getTransactionManager().createRequest(player, target, amount);
         } catch (NumberFormatException e) {
             player.sendMessage(plugin.getMessage("invalid-number"));
@@ -49,10 +77,12 @@ public class EconomyHandler {
             player.sendMessage(plugin.getMessage("no-permission"));
             return;
         }
+
         if (args.length >= 2 && args[1].equalsIgnoreCase("list")) {
             plugin.getAuctionManager().toggleMessages(player);
             return;
         }
+
         if (args.length < 3) {
             player.sendMessage(plugin.getMessage("syntax-auc"));
             return;

@@ -7,7 +7,7 @@ not-enough-xp: "&cVocê não tem níveis de XP suficientes!"
 not-enough-xp-sender: "&cO doador não possui mais o XP necessário."
 not-enough-money: "&cVocê não tem dinheiro suficiente para este lance!"
 player-not-found: "&cJogador não encontrado."
-player-offline: "&cO jogador que enviou a solicitação está offline."
+player-offline: "&cO jogador que enviou a solicitaçao está offline."
 xp-stored: "&aVocê armazenou &e{amount} &aníveis em garrafas (&e{points} &apontos)!"
 xp-custom-bottle: "&aGarrafa customizada criada com &e{amount} &aníveis (&e{points} &apontos)."
 donate-sent: "&aSolicitação de doação enviada para &e{player}&a."
@@ -35,8 +35,19 @@ manual-rain-started: "&aChuva de XP manual iniciada: &e{amount} &aesferas por &e
 in-game-rain-announcement: "&aA chuva de XP começará em &e{time} &ana arena!"
 reload-success: "&aConfigurações e Mensagens recarregadas com sucesso!"
 
+# Novas chaves v1.2
+inventory-partial-info: "&6Seu inventário encheu! &e{stored} &anivéis guardados, &e{remaining} &anivéis mantidos na barra."
+next-rain-info: "&aA próxima chuva de XP será em: &e{time}"
+xp-rain-countdown: "&aChuva de xp em: &e{time} {unit} &7- &b{instruction}"
+inspect-info: "&e{player} &apossui &e{level} &aníveis de XP | (&e{points}&a) pontos de XP."
+
+# Unidades de tempo para tradução
+time-unit-minutes: "minutos"
+time-unit-hours: "horas"
+time-unit-seconds: "segundos"
+
 # Webhooks
-webhook-rain-announcement: "🌧️ **Chuva de XP vindo aí!** O evento começará em **{time}** na arena designada."
+webhook-rain-announcement: "🌧️ **Chuva de xp em:** {time} {unit} - {instruction}"
 webhook-rain-started: "⚡ **A Chuva de XP COMEÇOU!** Corram para a arena para coletar seus orbs!"
 webhook-donate-report: "📜 **Doação de XP**: {sender} doou {amount} níveis para {target} ({points} pontos)."
 webhook-auction-report: "💰 **Leilão de XP**: {player} vendeu {amount} níveis por {price} para {winner} ({points} pontos)."
@@ -46,6 +57,7 @@ webhook-bottle-storage: "🍾 **Armazenamento**: {player} guardou {amount} níve
 help-menu:
   - "&a--- Ajuda XPTweak ---"
   - "&e/xpt max &7- Guarda todo seu XP em garrafas vanilla"
+  - "&e/xpt inv &7- Enche o inv. com garrafas e mantém o resto na barra"
   - "&e/xpt lvl <qtd> &7- Guarda níveis específicos em garrafas"
   - "&e/xptc max &7- Cria garrafa NBT com todo seu XP"
   - "&e/xptc lvl <qtd> &7- Cria garrafa NBT com níveis específicos"
@@ -54,5 +66,7 @@ help-menu:
   - "&e/xpt auc <lvl> <preço> &7- Iniciar um leilão de XP"
   - "&e/xpt auc list &7- Ativa/Desativa alertas de leilão no chat"
   - "&e/xpt bid [x1|x2] &7- Dar um lance no leilão ativo"
+  - "&e/xpt time &7- Mostra o tempo para a próxima chuva"
+  - "&e/xpt inspect <player> &7- Vê o XP detalhado de um jogador"
   - "&e/xpt rain <qtd> <tempo> &7- Iniciar chuva de XP (Admin)"
   - "&e/xpt reload &7- Recarregar configurações (Admin)"

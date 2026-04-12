@@ -23,7 +23,7 @@ public class XPRainManager {
     private final XPTweak plugin;
     private final DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
     private final Random random = new Random();
-    private int lastProcessedMinute = -1; // Trava contra duplicatas no mesmo minuto
+    private String lastAnnouncedTime = "";
 
     public XPRainManager(XPTweak plugin) {
         this.plugin = plugin;
@@ -35,11 +35,7 @@ public class XPRainManager {
             @Override
             public void run() {
                 LocalTime now = LocalTime.now();
-                int currentMinute = now.getHour() * 60 + now.getMinute();
-
-                // Se já processamos este minuto, ignora
-                if (currentMinute == lastProcessedMinute) return;
-                
+                int currentTotalMinute = now.getHour() * 60 + now.getMinute();
                 List<String> scheduledTimes = plugin.getConfig().getStringList("xp-rain.times");
 
                 for (String timeStr : scheduledTimes) {
@@ -50,51 +46,94 @@ public class XPRainManager {
                         if (diffMinutes < 0) diffMinutes += 1440;
 
                         if (diffMinutes >= 0 && diffMinutes <= 30) {
-                            lastProcessedMinute = currentMinute; // Marca como processado
-                            handleAnnouncements(diffMinutes);
+                            String announcementKey = timeStr + ":" + currentTotalMinute + ":" + diffMinutes;
                             
-                            if (diffMinutes == 0) {
-                                String webhookUrl = plugin.getConfig().getString("webhooks.xp-rain");
-                                plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-rain-started"));
-                                executeRain(plugin.getConfig().getInt("xp-rain.total-orbs", 500), 10);
+                            if (!lastAnnouncedTime.equals(announcementKey)) {
+                                lastAnnouncedTime = announcementKey;
+                                handleAnnouncements(diffMinutes);
+                                
+                                if (diffMinutes == 0) {
+                                    String webhookUrl = plugin.getConfig().getString("webhooks.xp-rain");
+                                    plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-rain-started"));
+                                    executeRain(plugin.getConfig().getInt("xp-rain.total-orbs", 500), 10);
+                                }
                             }
                         }
-                    } catch (Exception e) {
-                        // plugin.getLogger().warning("Invalid time format in config: " + timeStr);
-                    }
+                    } catch (Exception ignored) {}
                 }
             }
-        }.runTaskTimer(plugin, 20L, 600L); // Checa a cada 30 segundos para maior precisão
+        }.runTaskTimer(plugin, 20L, 200L);
     }
 
     private void handleAnnouncements(long minutesLeft) {
         String webhookUrl = plugin.getConfig().getString("webhooks.xp-rain");
-        String timeDisplay = formatMinutes(minutesLeft);
+        String instruction = plugin.getConfig().getString("xp-rain.location-instruction", "");
+        
+        String unit = plugin.getMessageRaw(minutesLeft >= 60 ? "time-unit-hours" : "time-unit-minutes");
+        long displayValue = minutesLeft >= 60 ? minutesLeft / 60 : minutesLeft;
+        
+        String announcementMsg = plugin.getMessage("xp-rain-countdown")
+                .replace("{time}", String.valueOf(displayValue))
+                .replace("{unit}", unit)
+                .replace("{instruction}", instruction);
 
-        // DISCORD (30, 15, 10, 5)
         if (minutesLeft == 30 || minutesLeft == 15 || minutesLeft == 10 || minutesLeft == 5) {
-            String discordMsg = plugin.getMessageRaw("webhook-rain-announcement").replace("{time}", timeDisplay);
-            plugin.getDiscordWebhook().send(webhookUrl, discordMsg);
+            plugin.getDiscordWebhook().send(webhookUrl, announcementMsg);
         }
 
-        // IN-GAME
         if (plugin.getConfig().getBoolean("xp-rain.announcement-enabled", false)) {
             if (minutesLeft == 30 || minutesLeft == 15 || minutesLeft == 10 || 
                 minutesLeft == 5 || minutesLeft == 4 || minutesLeft == 3 || 
                 minutesLeft == 2 || minutesLeft == 1) {
                 
-                Bukkit.broadcastMessage(plugin.getMessage("in-game-rain-announcement").replace("{time}", timeDisplay));
+                Bukkit.broadcastMessage(announcementMsg);
                 
                 if (minutesLeft == 1) {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            Bukkit.broadcastMessage(plugin.getMessage("in-game-rain-announcement").replace("{time}", "30 seconds"));
+                            String secMsg = plugin.getMessage("xp-rain-countdown")
+                                    .replace("{time}", "30")
+                                    .replace("{unit}", plugin.getMessageRaw("time-unit-seconds"))
+                                    .replace("{instruction}", instruction);
+                            Bukkit.broadcastMessage(secMsg);
                         }
                     }.runTaskLater(plugin, 600L);
                 }
             }
         }
+    }
+
+    /**
+     * CORREÇÃO v1.2.2: Formatação Compacta 00h:00m:00s
+     */
+    public String getTimeUntilNext() {
+        LocalTime now = LocalTime.now();
+        List<String> times = plugin.getConfig().getStringList("xp-rain.times");
+        long shortestSeconds = -1;
+
+        for (String t : times) {
+            try {
+                LocalTime rt = LocalTime.parse(t, timeFormatter);
+                long diff = Duration.between(now, rt).getSeconds();
+                
+                // Se já passou hoje, calcula para o dia seguinte (+24h em segundos)
+                if (diff <= 0) diff += 86400; 
+                
+                if (shortestSeconds == -1 || diff < shortestSeconds) {
+                    shortestSeconds = diff;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (shortestSeconds == -1) return "00h:00m:00s";
+        
+        long h = shortestSeconds / 3600;
+        long m = (shortestSeconds % 3600) / 60;
+        long s = shortestSeconds % 60;
+
+        // Formata como 00h:00m:00s garantindo dois dígitos
+        return String.format("%02dh:%02dm:%02ds", h, m, s);
     }
 
     public void executeRain(int totalAmount, int durationSeconds) {
@@ -134,11 +173,5 @@ public class XPRainManager {
                 ticksElapsed++;
             }
         }.runTaskTimer(plugin, 0L, 1L);
-    }
-
-    private String formatMinutes(long minutes) {
-        if (minutes == 1) return "1 minute";
-        if (minutes == 0) return "now";
-        return minutes + " minutes";
     }
 }

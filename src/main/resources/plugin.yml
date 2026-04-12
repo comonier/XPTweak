@@ -18,10 +18,10 @@ commands:
 permissions:
   # Permissões de Usuário
   xptweak.user.base:
-    description: Permite acessar o menu de ajuda e aceitar doações.
+    description: Permite acessar o menu de ajuda, aceitar doações e ver o tempo da chuva.
     default: true
   xptweak.user.store:
-    description: Permite guardar XP em garrafas (max/lvl).
+    description: Permite guardar XP em garrafas (max/lvl/inv).
     default: true
   xptweak.user.give:
     description: Permite doar e aceitar doações de XP.
@@ -40,6 +40,9 @@ permissions:
   xptweak.admin.rain:
     description: Permite iniciar a chuva de XP manualmente.
     default: op
+  xptweak.admin.inspect:
+    description: Permite inspecionar níveis e pontos de XP de outros jogadores.
+    default: op
 
   # Agrupamentos (Wildcards)
   xptweak.user.*:
@@ -54,4 +57,5 @@ permissions:
     children:
       xptweak.admin.reload: true
       xptweak.admin.rain: true
+      xptweak.admin.inspect: true
       xptweak.user.*: true

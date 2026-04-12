@@ -15,6 +15,11 @@ public class StorageHandler {
         this.plugin = plugin;
     }
 
+    /**
+     * Comando /xpt max ou /xpt all
+     * Zera o XP do jogador e converte em garrafas. 
+     * Se o inventário estiver cheio, exige 'confirm' para dropar no chão.
+     */
     public void handleMax(Player player, String[] args) {
         if (!player.hasPermission("xptweak.user.store")) {
             player.sendMessage(plugin.getMessage("no-permission"));
@@ -31,6 +36,7 @@ public class StorageHandler {
         int bottleCount = totalPoints / 7;
         if (bottleCount <= 0) bottleCount = 1;
 
+        // CORREÇÃO: Verifica se o array tem tamanho suficiente antes de acessar o índice 1
         boolean forceDrop = args.length > 1 && args[1].equalsIgnoreCase("confirm");
         
         if (!hasInventorySpace(player, bottleCount) && !forceDrop) {
@@ -39,6 +45,7 @@ public class StorageHandler {
             return;
         }
 
+        // Zera o XP do jogador completamente
         player.setLevel(0);
         player.setExp(0);
         
@@ -46,6 +53,49 @@ public class StorageHandler {
         sendStorageLogs(player, levels, totalPoints);
     }
 
+    /**
+     * NOVO Comando /xpt inv
+     * Preenche apenas o espaço disponível no inventário e mantém o restante na barra.
+     */
+    public void handleInv(Player player) {
+        if (!player.hasPermission("xptweak.user.store")) {
+            player.sendMessage(plugin.getMessage("no-permission"));
+            return;
+        }
+
+        int totalPoints = plugin.getXpManager().getTotalExperience(player);
+        if (totalPoints < 7) {
+            player.sendMessage(plugin.getMessage("not-enough-xp"));
+            return;
+        }
+
+        int capacityInBottles = getFreeBottleCapacity(player);
+        if (capacityInBottles <= 0) {
+            player.sendMessage(plugin.getMessage("inventory-full"));
+            return;
+        }
+
+        int bottlesToGive = Math.min(totalPoints / 7, capacityInBottles);
+        int pointsToRemove = bottlesToGive * 7;
+
+        int oldLevel = player.getLevel();
+        
+        // Remove os pontos e atualiza a barra
+        takePointsAndUpdateBar(player, pointsToRemove);
+        
+        player.getInventory().addItem(new ItemStack(Material.EXPERIENCE_BOTTLE, bottlesToGive));
+
+        int levelsStored = oldLevel - player.getLevel();
+        
+        player.sendMessage(plugin.getMessage("inventory-partial-info")
+                .replace("{stored}", String.valueOf(levelsStored))
+                .replace("{remaining}", String.valueOf(player.getLevel())));
+    }
+
+    /**
+     * Comando /xpt lvl <qtd>
+     * Converte níveis específicos em garrafas.
+     */
     public void handleLvl(Player player, String[] args) {
         if (!player.hasPermission("xptweak.user.store")) {
             player.sendMessage(plugin.getMessage("no-permission"));
@@ -63,6 +113,7 @@ public class StorageHandler {
                 return;
             }
 
+            // CORREÇÃO: Verifica se o array tem tamanho suficiente antes de acessar o índice 2
             boolean forceDrop = args.length > 2 && args[2].equalsIgnoreCase("confirm");
             
             int currentPoints = plugin.getXpManager().getTotalExperience(player);
@@ -87,16 +138,28 @@ public class StorageHandler {
         }
     }
 
-    private boolean hasInventorySpace(Player player, int amount) {
-        int freeSlots = 0;
+    private int getFreeBottleCapacity(Player player) {
+        int count = 0;
         for (ItemStack item : player.getInventory().getStorageContents()) {
             if (item == null || item.getType() == Material.AIR) {
-                freeSlots += 64;
+                count += 64;
             } else if (item.getType() == Material.EXPERIENCE_BOTTLE) {
-                freeSlots += (64 - item.getAmount());
+                count += (64 - item.getAmount());
             }
         }
-        return freeSlots >= amount;
+        return count;
+    }
+
+    private void takePointsAndUpdateBar(Player player, int points) {
+        int currentPoints = plugin.getXpManager().getTotalExperience(player);
+        int newTotal = Math.max(0, currentPoints - points);
+        player.setLevel(0);
+        player.setExp(0);
+        player.giveExp(newTotal);
+    }
+
+    private boolean hasInventorySpace(Player player, int amount) {
+        return getFreeBottleCapacity(player) >= amount;
     }
 
     private void giveOrDropItems(Player player, ItemStack items, boolean forceDrop) {

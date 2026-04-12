@@ -48,8 +48,24 @@ public class XPTCommand implements CommandExecutor {
         switch (sub) {
             case "max":
             case "all":
-                // CORREÇÃO: Passando o array 'args' para processar o 'confirm'
+                // Verifica segurança de inventário e possibilidade de 'confirm'
                 storage.handleMax(player, args);
+                break;
+
+            case "inv":
+                // Preenche inventário até o limite e mantém o resto na barra
+                storage.handleInv(player);
+                break;
+
+            case "time":
+                // Mostra contagem regressiva para a próxima chuva
+                player.sendMessage(plugin.getMessage("next-rain-info")
+                        .replace("{time}", plugin.getXpRainManager().getTimeUntilNext()));
+                break;
+
+            case "inspect":
+                // Permite admin ver XP detalhado de outros jogadores
+                economy.handleInspect(player, args);
                 break;
                 
             case "lvl":
@@ -61,8 +77,11 @@ public class XPTCommand implements CommandExecutor {
                 break;
                 
             case "accept":
-                // Chamando via economy handler para manter o padrão
-                economy.handleAccept(player);
+                if (!player.hasPermission("xptweak.user.give")) {
+                    player.sendMessage(plugin.getMessage("no-permission"));
+                    return true;
+                }
+                plugin.getTransactionManager().acceptRequest(player);
                 break;
                 
             case "auc":
@@ -86,6 +105,7 @@ public class XPTCommand implements CommandExecutor {
     }
 
     private void sendHelp(Player player) {
+        // Busca a lista de ajuda traduzida do arquivo de mensagens carregado
         List<String> helpLines = plugin.getMessagesConfig().getStringList("help-menu");
         
         if (helpLines == null || helpLines.isEmpty()) {

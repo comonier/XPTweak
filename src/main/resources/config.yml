@@ -69,13 +69,18 @@ xp-rain:
   
   # Set to false to test the rain logic without broadcasting chat messages.
   # Note: Discord webhooks will still be sent if a URL is configured above.
-  announcement-enabled: false
+  announcement-enabled: true
   
   # Scheduled times in 24h format.
   times:
+    - "09:00"
     - "12:00"
+    - "15:00"
     - "18:00"
+    - "21:00"
     - "00:00"
+    - "03:00"
+    - "06:00"
     
   # World and WorldGuard Region name.
   world: "world"
@@ -84,27 +89,29 @@ xp-rain:
   # Total amount of XP orbs to spawn during the scheduled rain.
   total-orbs: 500
 
+  # NEW LOGIC v1.2: Location instruction variable {instruction}
+  # Type here the warning for players to teleport to the XP Rain location.
+  # Example: 'Type /warp xp' or 'Go to the main arena'
+  location-instruction: "Type /warp xp"
+
 # ==============================================================================
 # CUSTOMIZABLE HELP MENU
+# This menu is now handled by language files (messages_XX.yml).
+# The lines below are kept only for reference if needed.
 # ==============================================================================
-help-menu:
-  - "&a--- XPTweak Help ---"
-  - "&e/xpt max &7- Guarda todo seu XP em garrafas vanilla"
-  - "&e/xpt lvl <qtd> &7- Guarda níveis específicos em garrafas"
-  - "&e/xpt give <player> <qtd> &7- Doar XP para outro jogador"
-  - "&e/xpt accept &7- Aceitar uma doação de XP pendente"
-  - "&e/xpt auc <lvl> <preço> &7- Iniciar um leilão de XP"
-  - "&e/xpt auc list &7- Ativa/Desativa alertas de leilão no chat"
-  - "&e/xpt bid [x1|x2] &7- Dar um lance no leilão ativo"
-  - "&e/xpt rain <qtd> <tempo> &7- Iniciar chuva de XP (Admin)"
-  - "&e/xpt reload &7- Recarregar configurações (Admin)"
+# help-menu:
+#   - "&a--- XPTweak Help ---"
+#   - "&e/xpt max &7- Guarda todo seu XP em garrafas vanilla"
+#   - "&e/xpt inv &7- Enche o inv. com garrafas e mantém o resto na barra"
+#   - "&e/xpt inspect <player> &7- Vê o XP detalhado de um jogador"
+#   ...
 
 # ==============================================================================
 # PERMISSIONS REFERENCE
 # ==============================================================================
 # [USER PERMISSIONS]
-# xptweak.user.base    - Access to /xpt help and /xpt accept (Default: true)
-# xptweak.user.store   - Access to /xpt max and /xpt lvl (Default: true)
+# xptweak.user.base    - Access to /xpt help, /xpt accept, /xpt time and /xpt inspect (Default: true)
+# xptweak.user.store   - Access to /xpt max, /xpt lvl and /xpt inv (Default: true)
 # xptweak.user.give    - Access to /xpt give (Default: true)
 # xptweak.user.auction - Access to /xpt auc and /xpt bid (Default: true)
 # xptweak.user.custom  - Access to /xptc (Custom NBT Bottles) (Default: OP)

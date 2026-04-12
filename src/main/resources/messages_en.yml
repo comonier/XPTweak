@@ -35,8 +35,19 @@ manual-rain-started: "&aManual XP Rain started: &e{amount} &aorbs over &e{time} 
 in-game-rain-announcement: "&aXP rain will start in &e{time} &ain the arena!"
 reload-success: "&aConfiguration and Messages reloaded successfully!"
 
+# New v1.2 keys
+inventory-partial-info: "&6Inventory full! &e{stored} &alevels stored, &e{remaining} &alevels kept in your bar."
+next-rain-info: "&aNext XP Rain in: &e{time}"
+xp-rain-countdown: "&aXP Rain in: &e{time} {unit} &7- &b{instruction}"
+inspect-info: "&e{player} &ahave &e{level} &axp levels | (&e{points}&a) points of xp."
+
+# Time Units
+time-unit-minutes: "minutes"
+time-unit-hours: "hours"
+time-unit-seconds: "seconds"
+
 # Webhooks
-webhook-rain-announcement: "🌧️ **XP Rain Incoming!** The event will start in **{time}** in the designated arena."
+webhook-rain-announcement: "🌧️ **XP Rain in:** {time} {unit} - {instruction}"
 webhook-rain-started: "⚡ **XP Rain STARTED!** Run to the arena to collect your orbs!"
 webhook-donate-report: "📜 **XP Donation**: {sender} donated {amount} levels to {target} ({points} points)."
 webhook-auction-report: "💰 **XP Auction**: {player} sold {amount} levels for {price} to {winner} ({points} points)."
@@ -46,6 +57,7 @@ webhook-bottle-storage: "🍾 **Storage**: {player} stored {amount} levels in a 
 help-menu:
   - "&a--- XPTweak Help ---"
   - "&e/xpt max &7- Store all your XP in vanilla bottles"
+  - "&e/xpt inv &7- Fill inventory with bottles and keep the rest"
   - "&e/xpt lvl <amount> &7- Store specific levels in vanilla bottles"
   - "&e/xptc max &7- Create NBT bottle with all your XP"
   - "&e/xptc lvl <amount> &7- Create NBT bottle with specific levels"
@@ -54,5 +66,7 @@ help-menu:
   - "&e/xpt auc <lvl> <price> &7- Start an XP auction"
   - "&e/xpt auc list &7- Toggle auction alerts in chat"
   - "&e/xpt bid [x1|x2] &7- Place a bid on the active auction"
+  - "&e/xpt time &7- Show time until next rain"
+  - "&e/xpt inspect <player> &7- See detailed XP of a player"
   - "&e/xpt rain <amount> <time> &7- Start XP rain (Admin)"
   - "&e/xpt reload &7- Reload configurations (Admin)"
