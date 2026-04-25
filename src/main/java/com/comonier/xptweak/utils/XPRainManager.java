@@ -55,7 +55,10 @@ public class XPRainManager {
                                 if (diffMinutes == 0) {
                                     String webhookUrl = plugin.getConfig().getString("webhooks.xp-rain");
                                     plugin.getDiscordWebhook().send(webhookUrl, plugin.getMessageRaw("webhook-rain-started"));
-                                    executeRain(plugin.getConfig().getInt("xp-rain.total-orbs", 500), 10);
+                                    
+                                    // Executa a chuva usando os valores do config
+                                    int configOrbs = plugin.getConfig().getInt("xp-rain.total-orbs", 300);
+                                    executeRain(configOrbs, 10);
                                 }
                             }
                         }
@@ -104,9 +107,6 @@ public class XPRainManager {
         }
     }
 
-    /**
-     * CORREÇÃO v1.2.2: Formatação Compacta 00h:00m:00s
-     */
     public String getTimeUntilNext() {
         LocalTime now = LocalTime.now();
         List<String> times = plugin.getConfig().getStringList("xp-rain.times");
@@ -116,10 +116,7 @@ public class XPRainManager {
             try {
                 LocalTime rt = LocalTime.parse(t, timeFormatter);
                 long diff = Duration.between(now, rt).getSeconds();
-                
-                // Se já passou hoje, calcula para o dia seguinte (+24h em segundos)
                 if (diff <= 0) diff += 86400; 
-                
                 if (shortestSeconds == -1 || diff < shortestSeconds) {
                     shortestSeconds = diff;
                 }
@@ -132,13 +129,17 @@ public class XPRainManager {
         long m = (shortestSeconds % 3600) / 60;
         long s = shortestSeconds % 60;
 
-        // Formata como 00h:00m:00s garantindo dois dígitos
         return String.format("%02dh:%02dm:%02ds", h, m, s);
     }
 
-    public void executeRain(int totalAmount, int durationSeconds) {
+    /**
+     * Lógica v1.2.3: Divide o total de XP configurado pela quantidade de orbs.
+     */
+    public void executeRain(int totalOrbs, int durationSeconds) {
         String worldName = plugin.getConfig().getString("xp-rain.world", "world");
         String regionName = plugin.getConfig().getString("xp-rain.region-name", "xp_arena");
+        int totalXpPoints = plugin.getConfig().getInt("xp-rain.total-xp-points", 30000);
+        
         World world = Bukkit.getWorld(worldName);
         if (world == null) return;
 
@@ -150,24 +151,28 @@ public class XPRainManager {
         BlockVector3 min = region.getMinimumPoint();
         BlockVector3 max = region.getMaximumPoint();
 
+        // Calcula XP individual por orb
+        int xpPerOrb = Math.max(1, totalXpPoints / totalOrbs);
+        
         int totalTicks = durationSeconds * 20;
-        int orbsPerTick = Math.max(1, totalAmount / totalTicks);
+        int orbsPerTick = Math.max(1, totalOrbs / totalTicks);
 
         new BukkitRunnable() {
             int ticksElapsed = 0;
             int spawnedOrbs = 0;
             @Override
             public void run() {
-                if (ticksElapsed >= totalTicks || spawnedOrbs >= totalAmount) {
+                if (ticksElapsed >= totalTicks || spawnedOrbs >= totalOrbs) {
                     this.cancel();
                     return;
                 }
                 for (int i = 0; i < orbsPerTick; i++) {
-                    if (spawnedOrbs >= totalAmount) break;
+                    if (spawnedOrbs >= totalOrbs) break;
                     int x = random.nextInt((max.getX() - min.getX()) + 1) + min.getX();
                     int z = random.nextInt((max.getZ() - min.getZ()) + 1) + min.getZ();
                     int y = world.getHighestBlockYAt(x, z) + 15;
-                    world.spawn(new Location(world, x, y, z), ExperienceOrb.class).setExperience(10);
+                    
+                    world.spawn(new Location(world, x, y, z), ExperienceOrb.class).setExperience(xpPerOrb);
                     spawnedOrbs++;
                 }
                 ticksElapsed++;

@@ -1,4 +1,4 @@
-# XPTweak 🧪 (v1.2)
+# XPTweak 🧪
 
 **XPTweak** is an advanced experience (XP) management plugin for Minecraft, compatible with versions **1.19, 1.20, 1.21, and beyond**. Engineered for high performance, it fully supports **Spigot, Paper, and Folia (Multi-threading)** environments.
 

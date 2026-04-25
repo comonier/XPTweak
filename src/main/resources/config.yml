@@ -73,21 +73,35 @@ xp-rain:
   
   # Scheduled times in 24h format.
   times:
-    - "09:00"
-    - "12:00"
-    - "15:00"
-    - "18:00"
-    - "21:00"
-    - "00:00"
-    - "03:00"
     - "06:00"
+    - "08:00"
+    - "10:00"
+    - "12:00"
+    - "14:00"
+    - "16:00"
+    - "18:00"
+    - "20:00"
+    - "22:00"
     
   # World and WorldGuard Region name.
   world: "world"
   region-name: "xp_arena"
   
+
+  # NEW LOGIC v1.3: XP and Entities Control
+  # To avoid lag, keep total-orbs low (e.g., 100-500).
+  # The plugin will divide total-xp-points by total-orbs.
+  # 
+  # REFERENCE FOR XP POINTS:
+  # Level 30  ≈ 1,395 points
+  # Level 50  ≈ 5,345 points
+  # Level 100 ≈ 30,970 points
+  # Level 500 ≈ 1,010,000 points
+  # Level 1000 ≈ 4,200,000 points
+  total-xp-points: 1010000
+  
   # Total amount of XP orbs to spawn during the scheduled rain.
-  total-orbs: 500
+  total-orbs: 300
 
   # NEW LOGIC v1.2: Location instruction variable {instruction}
   # Type here the warning for players to teleport to the XP Rain location.
