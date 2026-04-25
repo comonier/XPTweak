@@ -38,7 +38,16 @@ public class XPTweak extends JavaPlugin {
             return;
         }
 
+        // Verifica se a pasta do plugin existe, se não, cria.
+        if (!getDataFolder().exists()) {
+            getDataFolder().mkdirs();
+        }
+
+        // Se o arquivo config.yml não existir, ele extrai o padrão do JAR.
         saveDefaultConfig();
+        // Força o carregamento dos valores (garante que se o arquivo foi deletado agora, ele use o novo)
+        reloadConfig();
+        
         saveDefaultMessages();
         
         this.databaseManager = new DatabaseManager(this);
@@ -57,8 +66,7 @@ public class XPTweak extends JavaPlugin {
         
         getServer().getPluginManager().registerEvents(new XPEventListener(this), this);
 
-        // Log atualizado para refletir a v1.2 e o sistema de inspeção/inventário
-        getLogger().info("XPTweak v1.2 enabled! Inspect, Time and Partial Storage (INV) systems active.");
+        getLogger().info("XPTweak v1.2.3 enabled! Configuration safety system active.");
     }
 
     @Override
@@ -79,22 +87,28 @@ public class XPTweak extends JavaPlugin {
         String[] langs = {"en", "pt", "es", "ru"};
         for (String lang : langs) {
             File file = new File(getDataFolder(), "messages_" + lang + ".yml");
-            if (!file.exists()) saveResource("messages_" + lang + ".yml", false);
+            // Se o dono deletar o arquivo de mensagem, o plugin gera o padrão novamente no próximo boot/reload
+            if (!file.exists()) {
+                saveResource("messages_" + lang + ".yml", false);
+            }
         }
     }
 
     public void reloadPluginConfig() {
         try {
+            // Se o dono deletou o config.yml e deu reload, gera um novo antes de carregar
+            File configFile = new File(getDataFolder(), "config.yml");
+            if (!configFile.exists()) {
+                saveDefaultConfig();
+            }
+            
             reloadConfig();
             loadLanguage();
             
-            // Cancela tarefas antigas para evitar as mensagens repetidas da chuva
             getServer().getScheduler().cancelTasks(this);
-            
-            // Reinicia o sistema de chuva
             this.xpRainManager = new XPRainManager(this);
             
-            getLogger().info("XPTweak: Configuration and translations reloaded.");
+            getLogger().info("XPTweak: Configuration and translations reloaded successfully.");
         } catch (Exception e) {
             getLogger().severe("Critical error during reload: " + e.getMessage());
         }
@@ -106,6 +120,8 @@ public class XPTweak extends JavaPlugin {
         
         if (!langFile.exists()) {
             langFile = new File(getDataFolder(), "messages_en.yml");
+            // Se nem o fallback existir (deletaram tudo), gera o padrão.
+            if (!langFile.exists()) saveResource("messages_en.yml", false);
         }
         
         messages = YamlConfiguration.loadConfiguration(langFile);
@@ -118,9 +134,7 @@ public class XPTweak extends JavaPlugin {
     public String getMessage(String path) {
         if (messages == null) return "Messages not loaded";
         String msg = messages.getString(path, "Missing message: " + path);
-        
         if (path.equals("prefix")) return ChatColor.translateAlternateColorCodes('&', msg);
-        
         String prefix = messages.getString("prefix", "&8[&aXPTweak&8] ");
         return ChatColor.translateAlternateColorCodes('&', prefix + msg);
     }
